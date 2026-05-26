@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Modbus Reader</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Modbus Reader</h1>
+    <div id="status" class="status disconnected" title="">
+      <span class="dot"></span><span id="status-text">Disconnected</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="card-head">
+        <h2>Connection</h2>
+        <div class="actions">
+          <button id="refresh-ports" class="btn btn-ghost" type="button">Refresh ports</button>
+          <button id="toggle-connect" class="btn btn-primary" type="button">Connect</button>
+        </div>
+      </div>
+      <form id="conn-form" class="form-grid" autocomplete="off">
+        <label class="full">
+          <span>Serial Port</span>
+          <select name="port" id="port-select"></select>
+        </label>
+        <label>
+          <span>Baud rate</span>
+          <select name="baudrate">
+            <option>2400</option>
+            <option>4800</option>
+            <option>9600</option>
+            <option>19200</option>
+            <option>38400</option>
+            <option>57600</option>
+            <option>115200</option>
+          </select>
+        </label>
+        <label>
+          <span>Parity</span>
+          <select name="parity">
+            <option value="N">None</option>
+            <option value="E">Even</option>
+            <option value="O">Odd</option>
+          </select>
+        </label>
+        <label>
+          <span>Stop bits</span>
+          <select name="stopbits">
+            <option>1</option>
+            <option>2</option>
+          </select>
+        </label>
+        <label>
+          <span>Data bits</span>
+          <select name="bytesize">
+            <option>8</option>
+            <option>7</option>
+          </select>
+        </label>
+        <label>
+          <span>Slave ID</span>
+          <input type="number" name="slave_id" min="1" max="247" value="1" />
+        </label>
+        <label>
+          <span>Timeout (s)</span>
+          <input type="number" name="timeout" step="0.1" min="0.1" value="1.0" />
+        </label>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Registers</h2>
+        <button id="add-reg" class="btn btn-primary" type="button">+ Add Register</button>
+      </div>
+      <div id="registers" class="reg-grid">
+        <p class="muted">No registers yet — click "Add Register" to begin.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content card">
+      <h2 id="modal-title">Add Register</h2>
+      <form id="reg-form" class="form-grid" autocomplete="off">
+        <label class="full">
+          <span>Name</span>
+          <input type="text" name="name" required placeholder="e.g. Voltage" />
+        </label>
+        <label>
+          <span>Type</span>
+          <select name="type">
+            <option value="holding">Holding Register (FC03)</option>
+            <option value="input">Input Register (FC04)</option>
+            <option value="coil">Coil (FC01)</option>
+            <option value="discrete">Discrete Input (FC02)</option>
+          </select>
+        </label>
+        <label>
+          <span>Address</span>
+          <input type="number" name="address" min="0" max="65535" value="0" required />
+        </label>
+        <label data-show="register">
+          <span>Data type</span>
+          <select name="data_type">
+            <option value="uint16">uint16</option>
+            <option value="int16">int16</option>
+            <option value="uint32">uint32 (2 regs)</option>
+            <option value="int32">int32 (2 regs)</option>
+            <option value="float32">float32 (2 regs)</option>
+          </select>
+        </label>
+        <label data-show="register">
+          <span>Word order (32-bit)</span>
+          <select name="word_order">
+            <option value="big">Big (ABCD)</option>
+            <option value="little">Swap (CDAB)</option>
+          </select>
+        </label>
+        <label data-show="register">
+          <span>Scale</span>
+          <input type="number" name="scale" step="any" value="1" />
+        </label>
+        <label data-show="register">
+          <span>Offset</span>
+          <input type="number" name="offset" step="any" value="0" />
+        </label>
+        <label data-show="register">
+          <span>Unit</span>
+          <input type="text" name="unit" placeholder="V, A, °C…" />
+        </label>
+        <div class="modal-actions full">
+          <button type="button" class="btn btn-ghost" id="modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
