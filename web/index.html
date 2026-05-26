@@ -121,18 +121,22 @@
             <option value="big">Big (ABCD)</option>
             <option value="little">Swap (CDAB)</option>
           </select>
+          <small class="hint">Only matters for 32-bit types. If the value looks wrong, try Swap.</small>
         </label>
         <label data-show="register">
           <span>Scale</span>
           <input type="number" name="scale" step="any" value="1" />
+          <small class="hint">Multiplier on the raw value. e.g. sensor returns <b>328</b> → set <b>0.1</b> → shown as <b>32.8</b>. Leave at 1 if no scaling needed.</small>
         </label>
         <label data-show="register">
           <span>Offset</span>
           <input type="number" name="offset" step="any" value="0" />
+          <small class="hint">Added after scale. e.g. raw Kelvin → set <b>-273.15</b> to display °C.</small>
         </label>
         <label data-show="register">
           <span>Unit</span>
           <input type="text" name="unit" placeholder="V, A, °C…" />
+          <small class="hint">Just a label shown next to the value.</small>
         </label>
         <div class="modal-actions full">
           <button type="button" class="btn btn-ghost" id="modal-cancel">Cancel</button>

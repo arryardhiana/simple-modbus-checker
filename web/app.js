@@ -6,9 +6,14 @@ const state = {
   ws: null,
   wsReconnectTimer: null,
   editingId: null,
+  history: {}, // id -> [{ t, v }]
 };
 
 const FC_LABEL = { holding: "FC03", input: "FC04", coil: "FC01", discrete: "FC02" };
+const HISTORY_MAX = 300; // ~5 minutes at 1Hz
+const SPARK_W = 100;
+const SPARK_H = 30;
+const SPARK_PAD = 1;
 
 async function api(path, opts = {}) {
   const res = await fetch(path, {
@@ -146,7 +151,68 @@ function renderRegisters() {
     return;
   }
   grid.innerHTML = "";
-  for (const r of regs) grid.appendChild(buildRegisterCard(r));
+  for (const r of regs) {
+    const card = buildRegisterCard(r);
+    grid.appendChild(card);
+    renderSparklineFor(r, card);
+  }
+}
+
+function renderSparklineFor(reg, card) {
+  const svg = card.querySelector(".spark");
+  if (!svg) return;
+  const isBool = reg.type === "coil" || reg.type === "discrete";
+  renderSparkline(svg, state.history[reg.id] || [], isBool);
+}
+
+function appendHistory(id, value) {
+  let buf = state.history[id];
+  if (!buf) buf = state.history[id] = [];
+  buf.push({ t: Date.now(), v: value });
+  if (buf.length > HISTORY_MAX) buf.splice(0, buf.length - HISTORY_MAX);
+}
+
+function renderSparkline(svgEl, points, isBoolean) {
+  if (points.length < 2) {
+    svgEl.innerHTML = "";
+    return;
+  }
+  const values = points.map((p) => (isBoolean ? (p.v ? 1 : 0) : Number(p.v)));
+  const finite = values.filter(Number.isFinite);
+  if (finite.length < 2) {
+    svgEl.innerHTML = "";
+    return;
+  }
+  let min = Math.min(...finite);
+  let max = Math.max(...finite);
+  if (min === max) { min -= 0.5; max += 0.5; }
+
+  const innerW = SPARK_W - 2 * SPARK_PAD;
+  const innerH = SPARK_H - 2 * SPARK_PAD;
+  const xAt = (i) => SPARK_PAD + (i / (values.length - 1)) * innerW;
+  const yAt = (v) => SPARK_H - SPARK_PAD - ((v - min) / (max - min)) * innerH;
+
+  let d = "";
+  if (isBoolean) {
+    for (let i = 0; i < values.length; i++) {
+      const x = xAt(i).toFixed(2);
+      const y = yAt(values[i]).toFixed(2);
+      if (i === 0) d += `M${x} ${y}`;
+      else d += `L${x} ${yAt(values[i - 1]).toFixed(2)}L${x} ${y}`;
+    }
+  } else {
+    for (let i = 0; i < values.length; i++) {
+      const x = xAt(i).toFixed(2);
+      const y = yAt(values[i]).toFixed(2);
+      d += i === 0 ? `M${x} ${y}` : `L${x} ${y}`;
+    }
+  }
+  const baseY = (SPARK_H - SPARK_PAD).toFixed(2);
+  const area = `${d}L${xAt(values.length - 1).toFixed(2)} ${baseY}L${xAt(0).toFixed(2)} ${baseY}Z`;
+
+  svgEl.innerHTML =
+    `<path d="${area}" class="spark-area"/>` +
+    `<path d="${d}" class="spark-line"/>`;
 }
 
 function buildRegisterCard(r) {
@@ -167,6 +233,7 @@ function buildRegisterCard(r) {
     <div class="value"><span class="v">—</span><span class="unit"></span></div>
     <div class="meta"></div>
     ${writable ? buildWriteRow(r) : ""}
+    <svg class="spark" viewBox="0 0 ${SPARK_W} ${SPARK_H}" preserveAspectRatio="none" aria-hidden="true"></svg>
   `;
   card.querySelector(".name").textContent = r.name;
   card.querySelector(".unit").textContent = r.unit || "";
@@ -231,9 +298,7 @@ function updateRegisterValue(id, value, error) {
 function formatNumber(n) {
   if (!Number.isFinite(n)) return String(n);
   if (Number.isInteger(n)) return n.toString();
-  const abs = Math.abs(n);
-  const decimals = abs < 1 ? 4 : abs < 100 ? 3 : 2;
-  return n.toFixed(decimals);
+  return n.toFixed(4).replace(/\.?0+$/, "");
 }
 
 async function deleteRegister(id) {
@@ -242,6 +307,7 @@ async function deleteRegister(id) {
   try {
     await api(`/api/registers/${id}`, { method: "DELETE" });
     state.config.registers = state.config.registers.filter((r) => r.id !== id);
+    delete state.history[id];
     renderRegisters();
   } catch (e) {
     alert("Delete failed: " + e.message);
@@ -317,6 +383,7 @@ async function saveRegister(ev) {
       });
       const idx = state.config.registers.findIndex((r) => r.id === state.editingId);
       if (idx >= 0) state.config.registers[idx] = saved;
+      delete state.history[state.editingId]; // scale/type may have changed; start fresh
     } else {
       saved = await api(`/api/registers`, {
         method: "POST", body: JSON.stringify(data),
@@ -347,7 +414,11 @@ function connectWS() {
       if (msg.errors && msg.errors[r.id]) {
         updateRegisterValue(r.id, null, msg.errors[r.id]);
       } else if (msg.values && r.id in msg.values) {
-        updateRegisterValue(r.id, msg.values[r.id], null);
+        const v = msg.values[r.id];
+        appendHistory(r.id, v);
+        updateRegisterValue(r.id, v, null);
+        const card = $(`.reg[data-id="${r.id}"]`);
+        if (card) renderSparklineFor(r, card);
       }
     }
   };

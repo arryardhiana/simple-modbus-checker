@@ -5,6 +5,7 @@ A minimalist web-based dashboard to read (and write) Modbus RTU registers via a 
 ## Features
 
 - **Live values** pushed over WebSocket every ~1 second
+- **In-memory sparkline** per register (last ~5 minutes / 300 samples, no database, cleared on browser reload)
 - **Read + write** support: Holding (FC03), Input (FC04), Coils (FC01), Discrete Inputs (FC02)
 - **Data types** `uint16` / `int16` / `uint32` / `int32` / `float32` with selectable word order (ABCD / CDAB) and linear `scale` / `offset` transform
 - **Configure entirely from the browser** — pick the serial port, set baud/parity/slave ID, add/edit/remove register definitions. Settings persist to `config.json`.
@@ -17,27 +18,23 @@ A minimalist web-based dashboard to read (and write) Modbus RTU registers via a 
 - **Frontend:** single-page vanilla HTML/CSS/JS
 - **Transport:** Modbus RTU over serial (USB-to-RS485)
 
-## Setup
+## Quick start
 
 ```bash
 git clone git@github.com:arryardhiana/simple-modbus-checker.git
 cd simple-modbus-checker
-python3 -m venv .venv
-source .venv/bin/activate
+./run.sh
+```
+
+That's it. `run.sh` creates the virtualenv on first run, installs/updates dependencies only when `requirements.txt` changes, then starts the app. The browser opens automatically at <http://127.0.0.1:8000>. Stop with `Ctrl+C`.
+
+### Manual / dev mode
+
+If you prefer to set things up by hand, or want auto-reload while editing code:
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-## Run
-
-```bash
-python main.py
-```
-
-The browser opens automatically at <http://127.0.0.1:8000>. Stop with `Ctrl+C`.
-
-To run without auto-opening the browser (or for development with auto-reload):
-
-```bash
 uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
@@ -49,8 +46,10 @@ uvicorn main:app --host 127.0.0.1 --port 8000 --reload
    - **Address:** 0-based register address
    - **Data type** (for registers): `uint16` / `int16` / `uint32` / `int32` / `float32`
    - **Word order** (for 32-bit): `Big (ABCD)` or `Swap (CDAB)` — check your device manual
-   - **Scale / Offset:** displayed value = raw × scale + offset
+   - **Scale / Offset:** displayed value = raw × scale + offset. Example: a temperature sensor returning raw `328` with **Scale = 0.1** displays as `32.8`. Use Offset for things like Kelvin→°C (`-273.15`).
    - **Unit:** display label only (V, A, °C, …)
+
+   The modal shows short hints under each field, so you don't need to remember what Scale/Offset/Word order do.
 3. **Write** — Holding registers show a number input + Write button; Coils show an Apple-style toggle.
 
 Live values update once per second while connected. A red border around a register means the last read failed (hover the value for the error).

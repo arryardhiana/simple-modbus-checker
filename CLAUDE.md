@@ -5,19 +5,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-# first-time setup
+# one-shot launcher (creates venv, installs deps if requirements changed, runs app)
+./run.sh
+
+# manual / dev mode with auto-reload
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-
-# run (opens browser at http://127.0.0.1:8000)
-python main.py
-
-# run without auto-opening browser / for development with reload
 uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 # syntax check
 python -m py_compile main.py modbus_client.py store.py
 ```
+
+`run.sh` uses `.venv/.deps-stamp` to skip `pip install` when `requirements.txt` is unchanged — fast re-runs.
 
 No test suite, linter, or formatter is configured. The frontend has no build step — `web/` is served as static files.
 
@@ -31,7 +31,7 @@ A web dashboard for reading/writing Modbus RTU registers over a USB-to-RS485 ada
 
 2. **`main.py` — FastAPI app**: one module-level `manager` and one module-level `config` dict. REST endpoints mutate `config` and call `save_config()` (atomic write via temp file in `store.py`). The `/ws` WebSocket loop iterates `config["registers"]` every 1 s, calls `manager.read_register` via `asyncio.to_thread`, and pushes `{connected, values, errors}` to the client. Per-register errors don't break the loop — they go in the `errors` map.
 
-3. **`web/` — vanilla SPA**: no framework, no bundler. `app.js` keeps a single `state` object, reconnects the WS with a 1.5s backoff, and renders register cards from the same schema the backend uses. Connection form changes auto-save to the backend on `change` (400 ms debounce) — explicit "Save" is only for register definitions via the modal.
+3. **`web/` — vanilla SPA**: no framework, no bundler. `app.js` keeps a single `state` object, reconnects the WS with a 1.5s backoff, and renders register cards from the same schema the backend uses. Connection form changes auto-save to the backend on `change` (400 ms debounce) — explicit "Save" is only for register definitions via the modal. **Per-register history is browser-side only**: each WS tick pushes the value into `state.history[id]` (capped at `HISTORY_MAX=300` samples ≈ 5 min) and a pure-SVG sparkline (`renderSparkline`) is redrawn. There is no backend persistence for time-series — refresh = empty graphs. History is also cleared on register delete and on edit (since scale/type may have changed).
 
 ### The shared register schema
 

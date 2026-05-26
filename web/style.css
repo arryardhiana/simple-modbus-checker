@@ -132,6 +132,17 @@ main {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.16);
 }
+.form-grid .hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 400;
+  line-height: 1.45;
+  margin-top: 2px;
+}
+.form-grid .hint b {
+  color: var(--text);
+  font-weight: 600;
+}
 
 .btn {
   font: inherit;
@@ -171,9 +182,33 @@ main {
   flex-direction: column;
   gap: 4px;
   transition: border-color 0.15s, box-shadow 0.15s;
+  overflow: hidden;
 }
 .reg:hover { border-color: var(--border-strong); }
 .reg.error { border-color: rgba(255, 59, 48, 0.5); }
+
+.spark {
+  display: block;
+  width: calc(100% + 36px);
+  height: 44px;
+  margin: 14px -18px -18px;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.012));
+  overflow: visible;
+}
+.spark-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.spark-area {
+  fill: rgba(0, 113, 227, 0.10);
+  stroke: none;
+}
+.reg.error .spark-line { stroke: var(--danger); }
+.reg.error .spark-area { fill: rgba(255, 59, 48, 0.08); }
 
 .reg .name {
   font-size: 12px;
