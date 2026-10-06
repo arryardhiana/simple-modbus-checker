@@ -113,16 +113,19 @@ Misal sensor mengembalikan raw value `328` yang artinya `32.8 °C`:
 ---
 
 ### Kasus B: Mengubah Slave ID Sensor (Write Single Register - FC06)
-Pada banyak modul sensor Modbus RS485 (seperti XY-MD02 / SHT20), identitas **Slave ID** tersimpan di register konfigurasi internal (`0x0100` atau desimal `256`):
+Pada modul sensor suhu/kelembaban Modbus RS485 (seperti modul XY-MD02 / SHT20), identitas **Slave ID** tersimpan di register konfigurasi internal **`257`** (`0x0101` — pada sebagian batch perangkat lain bisa berupa `256` / `0x0100`):
 
 1. Klik **+ Add Register**:
    - **Name**: `Ubah Slave ID`
    - **Type**: `Holding Register (Read FC03 / Write FC06)`
-   - **Address**: `256` (sesuai datasheet sensor)
+   - **Address**: `257` (atau `256` sesuai datasheet sensor)
    - **Data type**: `uint16`
 2. Klik tombol **`⚡ Write`** pada kartu register tersebut, masukkan Slave ID baru (misal: `20`), lalu klik **Send (FC06)**.
-3. ⚠️ **Wajib Power Cycle (Restart)**: Cabut kabel power sensor (VCC/GND), tunggu beberapa detik, lalu colokkan kembali agar mikrokontroler sensor memuat ID baru dari memori internalnya.
-4. Di form **Connection** aplikasi, ubah kolom **Slave ID** menjadi `20`, lalu klik **Disconnect** dan **Connect** kembali. Sensor kini berkomunikasi di ID baru.
+3. ⚠️ **WAJIB POWER CYCLE (CABUT-COLOK POWER)**:
+   > **Perhatian:** Setelah berhasil mengirimkan nilai via FC06, sensor **TIDAK AKAN** langsung merespons dengan ID baru sampai Anda mematikan dan menyalakan kembali power-nya!
+   > 
+   > Cabut kabel power sensor (VCC/GND), tunggu sekitar 3 detik, lalu colokkan kembali agar firmware sensor me-load Slave ID baru dari memori internalnya (EEPROM).
+4. Di form **Connection** aplikasi, ubah kolom **Slave ID** menjadi `20`, lalu klik **Disconnect** dan **Connect** kembali. Sensor kini aktif dan berkomunikasi di ID baru.
 
 ---
 
@@ -146,6 +149,7 @@ simple-modbus-reader/
 
 ## ⚠️ Catatan & Troubleshooting
 
+- 🔄 **Ubah Slave ID tidak berpengaruh?** Jangan lupa lakukan **power cycle** (cabut & colokkan kembali kabel power sensor). Mikrokontroler sensor umumnya hanya membaca alamat baru saat proses booting awal.
 - 🔌 **Port serial nggak muncul?** Install dulu driver USB-serial-nya — biasanya **CH340**, **FTDI**, atau **CP210x** tergantung chip di adapter Anda.
 - ⚙️ **Default 8/N/1 @ 9600 baud** sudah cocok untuk mayoritas device. Kalau bus Anda pakai 8/E/1, cukup ubah **Parity** ke **Even**.
 - 👤 **Satu slave per bus** — sesuai scope awal. Untuk multi-slave perlu modifikasi `slave_id` per-register dan sedikit refactor di `modbus_client.py`.
