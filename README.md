@@ -74,7 +74,7 @@ Klik **+ Add Register**, lalu isi form berikut:
 | Field          | Penjelasan                                                                                              |
 | -------------- | ------------------------------------------------------------------------------------------------------- |
 | **Name**       | Label bebas untuk Anda sendiri (mis. _"Suhu Boiler"_)                                                   |
-| **Type**       | `Holding` (FC03), `Input` (FC04), `Coil` (FC01), `Discrete Input` (FC02)                                |
+| **Type**       | `Holding Register (Read FC03 / Write FC06)`, `Input Register (Read Only - FC04)`, `Coil (Read FC01 / Write FC05)`, `Discrete Input (Read Only - FC02)` |
 | **Address**    | Alamat register (0-based) dari datasheet device                                                         |
 | **Data type**  | `uint16` / `int16` / `uint32` / `int32` / `float32` — tipe 32-bit memakai 2 register                    |
 | **Word order** | Cuma berlaku untuk tipe 32-bit. Kalau nilai 32-bit tampak aneh, coba ganti ke **Swap (CDAB)**           |
@@ -84,28 +84,45 @@ Klik **+ Add Register**, lalu isi form berikut:
 
 ### 3️⃣ Monitoring & Kontrol
 
-- 📈 **Nilai** dan **sparkline** update otomatis setiap detik selama koneksi aktif
-- 🔴 **Border merah** = pembacaan terakhir gagal (arahkan kursor ke nilai untuk lihat pesan errornya)
-- 🎚️ **Coil / Discrete** ditampilkan sebagai toggle ala iOS — klik untuk ubah ON/OFF (coil saja, discrete read-only)
-- ✍️ **Holding Register** punya input angka + tombol **Write** untuk menulis nilai baru
+- 📈 **Monitoring Bersih & Live**: Nilai dan sparkline otomatis ter-update setiap detik selama koneksi aktif.
+- 🔴 **Border merah**: Menandakan pembacaan terakhir gagal (arahkan kursor ke nilai untuk melihat pesan error).
+- ⚡ **Kontrol / Write via Modal**:
+  - Khusus register yang mendukung penulisan (`Holding Register` & `Coil`), terdapat tombol **`⚡ Write`** di sudut kanan atas kartu.
+  - Klik tombol **`⚡ Write`** untuk membuka pop-up khusus: menampilkan *Current Value* yang sedang dibaca live, input nilai baru yang ingin dikirim (atau toggle switch untuk coil), dan tombol konfirmasi pengiriman yang eksplisit (**Send (FC06)** / **Send (FC16)** / **Send (FC05)**).
+  - Tampilan kartu monitoring tetap rapi dan tidak bercampur antara nilai baca vs nilai tulis.
 
 ---
 
-## 💡 Contoh Kasus: Sensor Suhu
+## 💡 Contoh Kasus
 
+### Kasus A: Membaca Sensor Suhu (Read Only - FC04)
 Misal sensor mengembalikan raw value `328` yang artinya `32.8 °C`:
 
-| Field      | Nilai                  |
-| ---------- | ---------------------- |
-| Name       | `Suhu Boiler`          |
-| Type       | `Holding Register`     |
-| Address    | `0` (sesuai datasheet) |
-| Data type  | `uint16`               |
-| Scale      | `0.1`                  |
-| Offset     | `0`                    |
-| Unit       | `°C`                   |
+| Field      | Nilai                                  |
+| ---------- | -------------------------------------- |
+| Name       | `Suhu Boiler`                          |
+| Type       | `Input Register (Read Only - FC04)`    |
+| Address    | `1` (sesuai datasheet)                 |
+| Data type  | `uint16`                               |
+| Scale      | `0.1`                                  |
+| Offset     | `0`                                    |
+| Unit       | `°C`                                   |
 
 ➡️ Hasil tampil: **`32.8 °C`** dengan grafik kecil di bawahnya yang menunjukkan tren ~5 menit terakhir.
+
+---
+
+### Kasus B: Mengubah Slave ID Sensor (Write Single Register - FC06)
+Pada banyak modul sensor Modbus RS485 (seperti XY-MD02 / SHT20), identitas **Slave ID** tersimpan di register konfigurasi internal (`0x0100` atau desimal `256`):
+
+1. Klik **+ Add Register**:
+   - **Name**: `Ubah Slave ID`
+   - **Type**: `Holding Register (Read FC03 / Write FC06)`
+   - **Address**: `256` (sesuai datasheet sensor)
+   - **Data type**: `uint16`
+2. Klik tombol **`⚡ Write`** pada kartu register tersebut, masukkan Slave ID baru (misal: `20`), lalu klik **Send (FC06)**.
+3. ⚠️ **Wajib Power Cycle (Restart)**: Cabut kabel power sensor (VCC/GND), tunggu beberapa detik, lalu colokkan kembali agar mikrokontroler sensor memuat ID baru dari memori internalnya.
+4. Di form **Connection** aplikasi, ubah kolom **Slave ID** menjadi `20`, lalu klik **Disconnect** dan **Connect** kembali. Sensor kini berkomunikasi di ID baru.
 
 ---
 
