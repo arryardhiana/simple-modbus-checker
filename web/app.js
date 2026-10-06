@@ -6,6 +6,7 @@ const state = {
   ws: null,
   wsReconnectTimer: null,
   editingId: null,
+  writingId: null,
   history: {}, // id -> [{ t, v }]
 };
 
@@ -221,18 +222,19 @@ function buildRegisterCard(r) {
   card.dataset.id = r.id;
 
   const writable = r.type === "holding" || r.type === "coil";
+  if (writable) card.classList.add("writable");
   const fc = FC_LABEL[r.type] || "";
   const isBit = r.type === "coil" || r.type === "discrete";
 
   card.innerHTML = `
     <div class="actions-row">
+      ${writable ? '<button class="btn-write" data-act="open-write" type="button" title="Write to register">⚡ Write</button>' : ""}
       <button class="icon-btn" data-act="edit" title="Edit" aria-label="Edit">✎</button>
       <button class="icon-btn" data-act="del" title="Delete" aria-label="Delete">✕</button>
     </div>
     <div class="name"></div>
     <div class="value"><span class="v">—</span><span class="unit"></span></div>
     <div class="meta"></div>
-    ${writable ? buildWriteRow(r) : ""}
     <svg class="spark" viewBox="0 0 ${SPARK_W} ${SPARK_H}" preserveAspectRatio="none" aria-hidden="true"></svg>
   `;
   card.querySelector(".name").textContent = r.name;
@@ -242,56 +244,46 @@ function buildRegisterCard(r) {
 
   card.querySelector('[data-act="edit"]').addEventListener("click", () => openModal(r));
   card.querySelector('[data-act="del"]').addEventListener("click", () => deleteRegister(r.id));
-
   if (writable) {
-    if (r.type === "coil") {
-      const toggle = card.querySelector(".toggle");
-      toggle.addEventListener("change", () => writeValue(r.id, toggle.checked));
-    } else {
-      const btn = card.querySelector('[data-act="write"]');
-      const input = card.querySelector('input[type="number"]');
-      const submit = () => {
-        const v = parseFloat(input.value);
-        if (Number.isNaN(v)) { alert("Enter a number first."); return; }
-        writeValue(r.id, v);
-      };
-      btn.addEventListener("click", submit);
-      input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
-    }
+    card.querySelector('[data-act="open-write"]').addEventListener("click", () => openWriteModal(r));
   }
   return card;
 }
 
-function buildWriteRow(r) {
-  if (r.type === "coil") {
-    return `<div class="write-row"><input type="checkbox" class="toggle" aria-label="Set coil" /></div>`;
-  }
-  return `<div class="write-row">
-    <input type="number" step="any" placeholder="Write value…" />
-    <button class="btn btn-ghost" data-act="write" type="button">Write</button>
-  </div>`;
-}
-
 function updateRegisterValue(id, value, error) {
   const card = $(`.reg[data-id="${id}"]`);
-  if (!card) return;
-  const v = card.querySelector(".value .v");
-  if (error) {
-    card.classList.add("error");
-    v.textContent = "—";
-    v.title = error;
-    return;
+  let textVal = "—";
+  if (!error && value != null) {
+    if (typeof value === "boolean") {
+      textVal = value ? "ON" : "OFF";
+    } else if (typeof value === "number") {
+      textVal = formatNumber(value);
+    } else {
+      textVal = String(value);
+    }
   }
-  card.classList.remove("error");
-  v.title = "";
-  if (typeof value === "boolean") {
-    v.textContent = value ? "ON" : "OFF";
-    const toggle = card.querySelector(".toggle");
-    if (toggle && document.activeElement !== toggle) toggle.checked = value;
-  } else if (typeof value === "number") {
-    v.textContent = formatNumber(value);
-  } else {
-    v.textContent = String(value);
+
+  if (card) {
+    const v = card.querySelector(".value .v");
+    if (error) {
+      card.classList.add("error");
+      v.textContent = "—";
+      v.title = error;
+    } else {
+      card.classList.remove("error");
+      v.title = "";
+      v.textContent = textVal;
+    }
+  }
+
+  // Update write modal current value in real-time if this register is being edited
+  if (state.writingId === id) {
+    const writeValEl = $("#write-current-val");
+    if (writeValEl) {
+      const reg = state.config.registers.find((r) => r.id === id);
+      const unit = reg?.unit ? ` ${reg.unit}` : "";
+      writeValEl.textContent = error ? "Error" : `${textVal}${unit}`;
+    }
   }
 }
 
@@ -315,13 +307,93 @@ async function deleteRegister(id) {
 }
 
 async function writeValue(id, value) {
+  await api(`/api/registers/${id}/write`, {
+    method: "POST",
+    body: JSON.stringify({ value }),
+  });
+}
+
+// --- write modal ---
+function openWriteModal(reg) {
+  state.writingId = reg.id;
+  $("#write-modal-title").textContent = `Write: ${reg.name}`;
+
+  const isCoil = reg.type === "coil";
+  const dt = reg.data_type || "uint16";
+  const is32Bit = dt === "uint32" || dt === "int32" || dt === "float32";
+
+  if (isCoil) {
+    $("#write-modal-subtitle").textContent = `Coil · Address ${reg.address} · FC05 (Write Single Coil)`;
+    $("#write-input-label").style.display = "none";
+    $("#write-coil-container").style.display = "flex";
+    $("#write-submit-btn").textContent = "Send (FC05)";
+
+    const history = state.history[reg.id];
+    const lastVal = history && history.length > 0 ? history[history.length - 1].v : false;
+    $("#write-coil-toggle").checked = Boolean(lastVal);
+  } else {
+    const fcLabel = is32Bit ? "FC16 (Write Multiple Registers)" : "FC06 (Write Single Register)";
+    $("#write-modal-subtitle").textContent = `Holding Register · Address ${reg.address} · ${dt} · ${fcLabel}`;
+    $("#write-input-label").style.display = "flex";
+    $("#write-coil-container").style.display = "none";
+    $("#write-submit-btn").textContent = is32Bit ? "Send (FC16)" : "Send (FC06)";
+
+    const input = $("#write-input-val");
+    input.value = "";
+    input.step = (reg.scale && reg.scale < 1) ? String(reg.scale) : "any";
+    setTimeout(() => input.focus(), 50);
+  }
+
+  // Set current value
+  const history = state.history[reg.id];
+  const last = history && history.length > 0 ? history[history.length - 1].v : null;
+  const unit = reg.unit ? ` ${reg.unit}` : "";
+  if (last != null) {
+    const displayVal = typeof last === "boolean" ? (last ? "ON" : "OFF") : formatNumber(last);
+    $("#write-current-val").textContent = `${displayVal}${unit}`;
+  } else {
+    $("#write-current-val").textContent = "—";
+  }
+
+  $("#write-modal").classList.remove("hidden");
+}
+
+function closeWriteModal() {
+  $("#write-modal").classList.add("hidden");
+  state.writingId = null;
+}
+
+async function handleWriteSubmit(e) {
+  e.preventDefault();
+  if (!state.writingId) return;
+
+  const reg = state.config.registers.find((r) => r.id === state.writingId);
+  if (!reg) return;
+
+  let value;
+  if (reg.type === "coil") {
+    value = $("#write-coil-toggle").checked;
+  } else {
+    value = parseFloat($("#write-input-val").value);
+    if (Number.isNaN(value)) {
+      alert("Please enter a valid number.");
+      return;
+    }
+  }
+
+  const btn = $("#write-submit-btn");
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+
   try {
-    await api(`/api/registers/${id}/write`, {
-      method: "POST",
-      body: JSON.stringify({ value }),
-    });
-  } catch (e) {
-    alert("Write failed: " + e.message);
+    await writeValue(reg.id, value);
+    closeWriteModal();
+  } catch (err) {
+    alert("Write failed: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = origText;
   }
 }
 
@@ -454,8 +526,18 @@ window.addEventListener("DOMContentLoaded", async () => {
   $("#modal").addEventListener("click", (e) => {
     if (e.target.id === "modal") closeModal();
   });
+
+  $("#write-modal-cancel").addEventListener("click", closeWriteModal);
+  $("#write-form").addEventListener("submit", handleWriteSubmit);
+  $("#write-modal").addEventListener("click", (e) => {
+    if (e.target.id === "write-modal") closeWriteModal();
+  });
+
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !$("#modal").classList.contains("hidden")) closeModal();
+    if (e.key === "Escape") {
+      if (!$("#modal").classList.contains("hidden")) closeModal();
+      if (!$("#write-modal").classList.contains("hidden")) closeWriteModal();
+    }
   });
   $("#conn-form").addEventListener("change", scheduleSaveConnection);
 

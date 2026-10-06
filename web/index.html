@@ -95,10 +95,10 @@
         <label>
           <span>Type</span>
           <select name="type">
-            <option value="holding">Holding Register (FC03)</option>
-            <option value="input">Input Register (FC04)</option>
-            <option value="coil">Coil (FC01)</option>
-            <option value="discrete">Discrete Input (FC02)</option>
+            <option value="holding">Holding Register (Read FC03 / Write FC06)</option>
+            <option value="input">Input Register (Read Only - FC04)</option>
+            <option value="coil">Coil (Read FC01 / Write FC05)</option>
+            <option value="discrete">Discrete Input (Read Only - FC02)</option>
           </select>
         </label>
         <label>
@@ -141,6 +141,33 @@
         <div class="modal-actions full">
           <button type="button" class="btn btn-ghost" id="modal-cancel">Cancel</button>
           <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="write-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content card">
+      <h2 id="write-modal-title">Write Register</h2>
+      <p id="write-modal-subtitle" class="muted write-modal-sub"></p>
+      
+      <div class="write-info-box">
+        <span class="info-label">Current Value</span>
+        <span class="info-val" id="write-current-val">—</span>
+      </div>
+
+      <form id="write-form" class="form-grid" autocomplete="off">
+        <label class="full" id="write-input-label">
+          <span id="write-input-title">New value to send</span>
+          <input type="number" step="any" name="write_value" id="write-input-val" required placeholder="Enter value…" />
+        </label>
+        <div id="write-coil-container" class="full write-coil-box">
+          <span>Set Coil State (ON / OFF)</span>
+          <input type="checkbox" class="toggle" id="write-coil-toggle" aria-label="Toggle coil state" />
+        </div>
+        <div class="modal-actions full">
+          <button type="button" class="btn btn-ghost" id="write-modal-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="write-submit-btn">Send</button>
         </div>
       </form>
     </div>
