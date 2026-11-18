@@ -15,6 +15,8 @@ from store import load_config, save_config
 
 ROOT = Path(__file__).parent
 WEB_DIR = ROOT / "web"
+FRONTEND_DIST = ROOT / "frontend" / "dist"
+FRONTEND_ASSETS = FRONTEND_DIST / "assets"
 
 manager = ModbusManager()
 config = load_config()
@@ -166,10 +168,16 @@ async def ws(websocket: WebSocket):
 # --- static UI ---
 @app.get("/")
 def index():
+    if (FRONTEND_DIST / "index.html").exists():
+        return FileResponse(FRONTEND_DIST / "index.html")
     return FileResponse(WEB_DIR / "index.html")
 
 
-app.mount("/static", StaticFiles(directory=str(WEB_DIR)), name="static")
+if FRONTEND_ASSETS.exists():
+    app.mount("/assets", StaticFiles(directory=str(FRONTEND_ASSETS)), name="assets")
+
+if WEB_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(WEB_DIR)), name="static")
 
 
 if __name__ == "__main__":

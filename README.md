@@ -13,19 +13,19 @@
 - ✏️ **Read + Write** — Holding (FC03), Input (FC04), Coil (FC01), Discrete (FC02)
 - 🔢 **Tipe data lengkap** — `uint16` / `int16` / `uint32` / `int32` / `float32`, dengan pilihan word order (ABCD/CDAB) dan transformasi `scale × raw + offset`
 - 🎛️ **Setup dari browser** — ganti mode koneksi, atur IP/port/serial, tambah-edit-hapus register tanpa perlu edit file. Tersimpan otomatis ke `config.json`.
-- 🎨 **UI ala Apple** — system font, card lembut, accent biru, segmented tab control, modal animasi, toggle native untuk coil
-- 🪶 **Zero build step** — frontend cuma HTML/CSS/JS biasa, langsung di-serve
+- 🎨 **UI Modern dengan shadcn/ui** — Desain clean, modular, dark/light mode toggle, icon Lucide React, dan dialog interaktif
+- 🪶 **Otomatis Build & Serve** — Frontend React + Vite di-build otomatis dan di-serve langsung oleh FastAPI
 
 ---
 
 ## 🧰 Stack
 
-| Layer     | Tech                                                  |
-| --------- | ----------------------------------------------------- |
-| Backend   | Python · FastAPI · pymodbus · pyserial                |
-| Frontend  | Vanilla HTML/CSS/JS (no framework)                    |
-| Transport | Modbus RTU (Serial RS485) / Modbus Gateway (TCP/IP)   |
-| Realtime  | WebSocket                                             |
+| Layer     | Tech                                                                 |
+| --------- | -------------------------------------------------------------------- |
+| Backend   | Python · FastAPI · pymodbus · pyserial                               |
+| Frontend  | React 18 · TypeScript · Vite · Tailwind CSS · shadcn/ui (Radix UI)   |
+| Transport | Modbus RTU (Serial RS485) / Modbus Gateway (TCP/IP)                  |
+| Realtime  | WebSocket                                                            |
 
 ---
 

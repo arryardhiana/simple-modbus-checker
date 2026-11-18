@@ -28,5 +28,18 @@ if [ ! -f "$STAMP" ] || [ requirements.txt -nt "$STAMP" ]; then
   touch "$STAMP"
 fi
 
+if [ -d "frontend" ] && command -v npm >/dev/null 2>&1; then
+  FRONTEND_STAMP="frontend/node_modules/.build-stamp"
+  if [ ! -d "frontend/node_modules" ]; then
+    echo "[setup] Installing frontend dependencies..."
+    (cd frontend && npm install --quiet)
+  fi
+  if [ ! -d "frontend/dist" ] || [ ! -f "$FRONTEND_STAMP" ]; then
+    echo "[setup] Building React shadcn/ui frontend..."
+    (cd frontend && npm run build --quiet)
+    touch "$FRONTEND_STAMP"
+  fi
+fi
+
 echo "[run] Starting Modbus Reader at http://127.0.0.1:8000"
 exec python main.py

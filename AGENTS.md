@@ -23,7 +23,7 @@ python -m py_compile main.py modbus_client.py store.py test_modbus_tcp.py
 ```
 
 *Note on `run.sh`:* Uses `.venv/.deps-stamp` to skip `pip install` when `requirements.txt` is unchanged for fast re-runs.
-The frontend has no build step — `web/` is served directly as static files.
+The frontend builds automatically to `frontend/dist` via `npm run build` and is served directly by FastAPI.
 
 ## Architecture
 
@@ -42,11 +42,13 @@ Three layers within a single process:
    - The `/ws` WebSocket loop iterates over `config["registers"]` every 1 second, invokes `manager.read_register` via `asyncio.to_thread`, and broadcasts `{ connected, values, errors }` to connected clients.
    - Per-register read errors do not break the loop; they populate the `errors` map.
 
-3. **`web/` — Vanilla SPA Frontend**:
-   - Zero-framework, zero-bundler: raw HTML, CSS, and ES6+ JavaScript.
-   - `app.js` maintains a single `state` object, reconnects WebSocket with 1.5s backoff, and renders register cards according to the shared schema.
-   - Connection form edits auto-save to the backend on `change` (debounced at 400ms). Explicit "Save" is only required for register definitions via modal dialog.
-   - **Time-series history is browser-side only**: each WebSocket tick pushes the value to `state.history[id]` (capped at `HISTORY_MAX = 300` samples $\approx$ 5 minutes), redrawing an inline pure-SVG sparkline (`renderSparkline`). There is no backend time-series database.
+3. **Frontend (React + shadcn/ui & Vanilla Fallback)**:
+   - **`frontend/`**: Modern React 18 SPA built with Vite, TypeScript, Tailwind CSS, and shadcn/ui (Radix UI primitives).
+     - Component structure: `ConnectionCard`, `RegistersSection`, `RegisterCard`, `RegisterDialog`, `WriteDialog`, and `Sparkline`.
+     - In development: `cd frontend && npm run dev` (runs Vite dev server on port 5173 with proxy for `/api` and `/ws` to FastAPI).
+     - In production: `npm run build` generates `frontend/dist`, which FastAPI serves at `/` and `/assets`.
+   - **`web/`**: Retained as a lightweight fallback vanilla SPA (zero-dependency).
+   - **Time-series history is browser-side only**: each WebSocket tick pushes the value to history (capped at `HISTORY_MAX = 300` samples $\approx$ 5 minutes), redrawing an inline pure-SVG sparkline. There is no backend time-series database.
 
 ## Shared Register Schema
 
