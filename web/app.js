@@ -70,36 +70,99 @@ async function loadPorts() {
   if (current) sel.value = current;
 }
 
+function setConnectionTab(tab, triggerSave = false) {
+  const f = $("#conn-form")?.elements;
+  if (f && f.conn_type) f.conn_type.value = tab;
+
+  $$(".segment-btn").forEach((btn) => {
+    const isActive = btn.dataset.tab === tab;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  $$("[data-conn]").forEach((el) => {
+    el.style.display = el.dataset.conn === tab ? "" : "none";
+  });
+
+  const refreshBtn = $("#refresh-ports");
+  if (refreshBtn) refreshBtn.style.display = tab === "serial" ? "" : "none";
+
+  const badge = $("#conn-mode-badge");
+  if (badge) {
+    if (tab === "tcp") {
+      badge.textContent = "Network (Gateway)";
+      badge.className = "badge badge-network";
+    } else {
+      badge.textContent = "Serial (USB)";
+      badge.className = "badge badge-serial";
+    }
+  }
+
+  const slaveLabel = $("#slave-id-label");
+  const slaveHint = $("#slave-id-hint");
+  if (slaveLabel) slaveLabel.textContent = tab === "tcp" ? "Unit ID (Slave ID)" : "Slave ID";
+  if (slaveHint) {
+    slaveHint.textContent = tab === "tcp"
+      ? "Unit ID forwarded by gateway to device"
+      : "Target RS485 slave address (1-247)";
+  }
+
+  if (triggerSave) {
+    scheduleSaveConnection();
+  }
+}
+
 function fillConnectionForm(c) {
   const f = $("#conn-form").elements;
+  const conn_type = c.conn_type || "serial";
+  setConnectionTab(conn_type, false);
+
   if (c.baudrate != null) f.baudrate.value = String(c.baudrate);
   if (c.parity) f.parity.value = c.parity;
   if (c.stopbits != null) f.stopbits.value = String(c.stopbits);
   if (c.bytesize != null) f.bytesize.value = String(c.bytesize);
+  if (c.host) f.host.value = c.host;
+  if (c.tcp_port != null) f.tcp_port.value = String(c.tcp_port);
+  if (c.framing) f.framing.value = c.framing;
   if (c.slave_id != null) f.slave_id.value = String(c.slave_id);
   if (c.timeout != null) f.timeout.value = String(c.timeout);
 }
 
 function readConnectionForm() {
   const f = $("#conn-form").elements;
+  const conn_type = f.conn_type?.value || "serial";
   return {
-    port: $("#port-select").value,
-    baudrate: parseInt(f.baudrate.value, 10),
-    parity: f.parity.value,
-    stopbits: parseInt(f.stopbits.value, 10),
-    bytesize: parseInt(f.bytesize.value, 10),
-    slave_id: parseInt(f.slave_id.value, 10),
-    timeout: parseFloat(f.timeout.value),
+    conn_type,
+    port: $("#port-select").value || "",
+    baudrate: parseInt(f.baudrate.value, 10) || 9600,
+    parity: f.parity.value || "N",
+    stopbits: parseInt(f.stopbits.value, 10) || 1,
+    bytesize: parseInt(f.bytesize.value, 10) || 8,
+    host: f.host ? f.host.value.trim() : "192.168.1.100",
+    tcp_port: f.tcp_port ? parseInt(f.tcp_port.value, 10) || 502 : 502,
+    framing: f.framing ? f.framing.value : "tcp",
+    slave_id: parseInt(f.slave_id.value, 10) || 1,
+    timeout: parseFloat(f.timeout.value) || 1.0,
   };
 }
 
 function setStatus(connected, errorMsg) {
   const el = $("#status");
   el.classList.remove("connected", "disconnected", "error");
+  const conn = state.config?.connection || {};
+  const isTcp = conn.conn_type === "tcp";
+
   if (connected) {
     el.classList.add("connected");
-    $("#status-text").textContent = "Connected";
-    el.title = "";
+    if (isTcp) {
+      const mode = conn.framing === "rtu" ? "RTU" : "TCP";
+      $("#status-text").textContent = `Connected • Gateway (${conn.host || "host"}:${conn.tcp_port || 502} [${mode}])`;
+      el.title = `Modbus Gateway @ ${conn.host}:${conn.tcp_port}`;
+    } else {
+      const portName = conn.port ? conn.port.split("/").pop() : "Serial";
+      $("#status-text").textContent = `Connected • USB (${portName})`;
+      el.title = conn.port || "Serial";
+    }
   } else if (errorMsg) {
     el.classList.add("error");
     $("#status-text").textContent = "Error";
@@ -122,11 +185,16 @@ async function toggleConnect() {
       setStatus(false);
     } else {
       const conn = readConnectionForm();
-      if (!conn.port) {
+      if (conn.conn_type === "serial" && !conn.port) {
         alert("Please select a serial port.");
         return;
       }
+      if (conn.conn_type === "tcp" && !conn.host) {
+        alert("Please enter a gateway host or IP address.");
+        return;
+      }
       await api("/api/connection", { method: "POST", body: JSON.stringify(conn) });
+      state.config.connection = conn;
       const res = await api("/api/connect", { method: "POST" });
       if (!res.ok) {
         setStatus(false, res.message);
@@ -509,14 +577,22 @@ function scheduleSaveConnection() {
   saveConnTimer = setTimeout(async () => {
     try {
       const conn = readConnectionForm();
-      if (!conn.port) return;
+      if (conn.conn_type === "serial" && !conn.port) return;
+      if (conn.conn_type === "tcp" && !conn.host) return;
       await api("/api/connection", { method: "POST", body: JSON.stringify(conn) });
+      state.config.connection = conn;
     } catch {}
   }, 400);
 }
 
 // --- init ---
 window.addEventListener("DOMContentLoaded", async () => {
+  $$(".segment-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setConnectionTab(btn.dataset.tab, true);
+    });
+  });
+
   $("#refresh-ports").addEventListener("click", loadPorts);
   $("#toggle-connect").addEventListener("click", toggleConnect);
   $("#add-reg").addEventListener("click", () => openModal());

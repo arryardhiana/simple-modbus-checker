@@ -31,11 +31,15 @@ app = FastAPI(title="Simple Modbus Reader", lifespan=lifespan)
 
 # --- schemas ---
 class ConnectionConfig(BaseModel):
-    port: str
+    conn_type: Literal["serial", "tcp"] = "serial"
+    port: str = ""
     baudrate: int = 9600
     parity: Literal["N", "E", "O"] = "N"
     stopbits: Literal[1, 2] = 1
     bytesize: Literal[7, 8] = 8
+    host: str = "192.168.1.100"
+    tcp_port: int = Field(502, ge=1, le=65535)
+    framing: Literal["tcp", "rtu"] = "tcp"
     timeout: float = Field(1.0, gt=0)
     slave_id: int = Field(1, ge=1, le=247)
 

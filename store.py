@@ -8,11 +8,15 @@ CONFIG_PATH = Path(__file__).parent / "config.json"
 
 DEFAULT_CONFIG = {
     "connection": {
+        "conn_type": "serial",
         "port": "",
         "baudrate": 9600,
         "parity": "N",
         "stopbits": 1,
         "bytesize": 8,
+        "host": "192.168.1.100",
+        "tcp_port": 502,
+        "framing": "tcp",
         "timeout": 1.0,
         "slave_id": 1,
     },

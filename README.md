@@ -1,29 +1,31 @@
 # 📡 Simple Modbus Reader
 
-> Dashboard web minimalis untuk membaca & menulis register **Modbus RTU** lewat adapter **USB-to-RS485**. Tampilan modern ala Apple, live update tiap detik, dan grafik historical tanpa perlu database.
+> Dashboard web minimalis untuk membaca & menulis register **Modbus RTU** lewat adapter **USB-to-RS485** maupun lewat jaringan via **Modbus Gateway (Ethernet / TCP)**. Tampilan modern ala Apple, live update tiap detik, dan grafik historical tanpa perlu database.
 
 ---
 
 ## ✨ Fitur
 
+- 🌐 **Dual Connection Mode** — mendukung koneksi **Serial (USB / RS485)** dan **Network (Modbus Gateway)** dengan tab toggle yang mudah & jelas
+- 🔌 **Kompatibilitas Gateway Luas** — mendukung **Modbus TCP standar** (port 502) dan **Modbus RTU over TCP (transparent mode)**
 - ⚡ **Live values** — nilai register di-push lewat WebSocket setiap ~1 detik
 - 📊 **Sparkline historical** — grafik per-register selama ~5 menit terakhir, semua di memori browser (tanpa database, reset saat refresh halaman)
 - ✏️ **Read + Write** — Holding (FC03), Input (FC04), Coil (FC01), Discrete (FC02)
 - 🔢 **Tipe data lengkap** — `uint16` / `int16` / `uint32` / `int32` / `float32`, dengan pilihan word order (ABCD/CDAB) dan transformasi `scale × raw + offset`
-- 🎛️ **Setup dari browser** — pilih port serial, atur baud/parity/slave ID, tambah-edit-hapus register tanpa perlu edit file. Tersimpan otomatis ke `config.json`.
-- 🎨 **UI ala Apple** — system font, card lembut, accent biru, modal animasi, toggle native untuk coil
+- 🎛️ **Setup dari browser** — ganti mode koneksi, atur IP/port/serial, tambah-edit-hapus register tanpa perlu edit file. Tersimpan otomatis ke `config.json`.
+- 🎨 **UI ala Apple** — system font, card lembut, accent biru, segmented tab control, modal animasi, toggle native untuk coil
 - 🪶 **Zero build step** — frontend cuma HTML/CSS/JS biasa, langsung di-serve
 
 ---
 
 ## 🧰 Stack
 
-| Layer     | Tech                                       |
-| --------- | ------------------------------------------ |
-| Backend   | Python · FastAPI · pymodbus · pyserial     |
-| Frontend  | Vanilla HTML/CSS/JS (no framework)         |
-| Transport | Modbus RTU di atas serial (USB-to-RS485)   |
-| Realtime  | WebSocket                                  |
+| Layer     | Tech                                                  |
+| --------- | ----------------------------------------------------- |
+| Backend   | Python · FastAPI · pymodbus · pyserial                |
+| Frontend  | Vanilla HTML/CSS/JS (no framework)                    |
+| Transport | Modbus RTU (Serial RS485) / Modbus Gateway (TCP/IP)   |
+| Realtime  | WebSocket                                             |
 
 ---
 
@@ -61,11 +63,17 @@ uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 ### 1️⃣ Connect ke device
 
-- Pilih **Serial Port** Anda
-  - Di macOS biasanya muncul sebagai `/dev/cu.usbserial-*`
-  - Klik **Refresh ports** kalau adapter baru saja dicolok
-- Atur **Baud rate**, **Parity**, **Stop bits**, **Slave ID** sesuai datasheet device
-- Klik **Connect** — indikator status di pojok kanan atas berubah jadi hijau **● Connected**
+Pilih tab koneksi di bagian atas kartu **Connection**:
+
+- **🔌 Mode Serial (USB / RS485)**:
+  - Pilih **Serial Port** (klik **Refresh ports** jika adapter baru dicolok).
+  - Atur **Baud rate**, **Parity**, **Stop bits**, dan **Slave ID**.
+- **🌐 Mode Network (Modbus Gateway)**:
+  - Masukkan **Gateway Host / IP Address** (mis. `192.168.1.100` atau hostname).
+  - Masukkan **TCP Port** (default `502` untuk Modbus TCP).
+  - Pilih **Protocol Mode**: `Modbus TCP (Standard)` atau `Modbus RTU over TCP (Raw Encapsulation)`.
+  - Atur **Unit ID (Slave ID)** yang diteruskan ke perangkat target.
+- Klik **Connect** — indikator status di pojok kanan atas akan berubah menjadi hijau **● Connected • USB (...)** atau **● Connected • Gateway (...)**.
 
 ### 2️⃣ Tambah Register
 

@@ -1,40 +1,64 @@
 import struct
 from threading import Lock
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
-from pymodbus.client import ModbusSerialClient
+from pymodbus.client import ModbusSerialClient, ModbusTcpClient
 from pymodbus.exceptions import ModbusException
+from pymodbus.framer import FramerType
 
 
 class ModbusManager:
-    """Thread-safe wrapper around a single ModbusSerialClient (one slave on the bus)."""
+    """Thread-safe wrapper around a single Modbus client (Serial or TCP Gateway)."""
 
     def __init__(self) -> None:
-        self.client: Optional[ModbusSerialClient] = None
+        self.client: Optional[Union[ModbusSerialClient, ModbusTcpClient]] = None
         self.lock = Lock()
         self.slave_id: int = 1
         self.connected: bool = False
         self.last_error: Optional[str] = None
+        self.conn_type: str = "serial"
 
     # --- connection ---
     def connect(self, conn_cfg: dict) -> Tuple[bool, str]:
         with self.lock:
             self._disconnect_unlocked()
             try:
-                self.client = ModbusSerialClient(
-                    port=conn_cfg["port"],
-                    baudrate=int(conn_cfg["baudrate"]),
-                    parity=str(conn_cfg["parity"]),
-                    stopbits=int(conn_cfg["stopbits"]),
-                    bytesize=int(conn_cfg["bytesize"]),
-                    timeout=float(conn_cfg["timeout"]),
-                )
-                if not self.client.connect():
-                    self.client = None
-                    self.connected = False
-                    msg = f"Failed to open port {conn_cfg['port']}"
-                    self.last_error = msg
-                    return False, msg
+                conn_type = conn_cfg.get("conn_type", "serial")
+                self.conn_type = conn_type
+                if conn_type == "tcp":
+                    framing = conn_cfg.get("framing", "tcp")
+                    framer = FramerType.RTU if framing == "rtu" else FramerType.SOCKET
+                    host = conn_cfg.get("host", "127.0.0.1")
+                    port = int(conn_cfg.get("tcp_port", 502))
+                    timeout = float(conn_cfg.get("timeout", 1.0))
+                    self.client = ModbusTcpClient(
+                        host=host,
+                        port=port,
+                        framer=framer,
+                        timeout=timeout,
+                    )
+                    if not self.client.connect():
+                        self.client = None
+                        self.connected = False
+                        msg = f"Failed to connect to gateway at {host}:{port}"
+                        self.last_error = msg
+                        return False, msg
+                else:
+                    self.client = ModbusSerialClient(
+                        port=conn_cfg["port"],
+                        baudrate=int(conn_cfg["baudrate"]),
+                        parity=str(conn_cfg["parity"]),
+                        stopbits=int(conn_cfg["stopbits"]),
+                        bytesize=int(conn_cfg["bytesize"]),
+                        timeout=float(conn_cfg["timeout"]),
+                    )
+                    if not self.client.connect():
+                        self.client = None
+                        self.connected = False
+                        msg = f"Failed to open port {conn_cfg['port']}"
+                        self.last_error = msg
+                        return False, msg
+
                 self.slave_id = int(conn_cfg["slave_id"])
                 self.connected = True
                 self.last_error = None

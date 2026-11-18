@@ -13,21 +13,22 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
-# syntax check
-python -m py_compile main.py modbus_client.py store.py
+# tests & syntax check
+python -m unittest discover -p "test_*.py"
+python -m py_compile main.py modbus_client.py store.py test_modbus_tcp.py
 ```
 
 `run.sh` uses `.venv/.deps-stamp` to skip `pip install` when `requirements.txt` is unchanged — fast re-runs.
 
-No test suite, linter, or formatter is configured. The frontend has no build step — `web/` is served as static files.
+The frontend has no build step — `web/` is served as static files.
 
 ## Architecture
 
-A web dashboard for reading/writing Modbus RTU registers over a USB-to-RS485 adapter. **Single slave per bus** is an intentional scope constraint (see README); changing this is a non-trivial refactor of `ModbusManager` and the register schema.
+A web dashboard for reading/writing Modbus registers over a USB-to-RS485 adapter or a Modbus Gateway (Ethernet/TCP).
 
 ### Three layers, one process
 
-1. **`modbus_client.py` — `ModbusManager`**: thin thread-safe wrapper around one `ModbusSerialClient`. All serial I/O goes through `self.lock` (a `threading.Lock`) so reads (from the WS loop) and writes (from REST handlers) serialize on the bus. `_encode`/`_decode` handle uint16/int16/uint32/int32/float32 with ABCD/CDAB word order, plus `scale`/`offset` linear transform. The manager owns no async code — callers wrap blocking calls in `asyncio.to_thread`.
+1. **`modbus_client.py` — `ModbusManager`**: thin thread-safe wrapper around `ModbusSerialClient` or `ModbusTcpClient` (Modbus TCP standard or Modbus RTU over TCP). All I/O goes through `self.lock` (a `threading.Lock`) so reads (from the WS loop) and writes (from REST handlers) serialize on the connection. `_encode`/`_decode` handle uint16/int16/uint32/int32/float32 with ABCD/CDAB word order, plus `scale`/`offset` linear transform. The manager owns no async code — callers wrap blocking calls in `asyncio.to_thread`.
 
 2. **`main.py` — FastAPI app**: one module-level `manager` and one module-level `config` dict. REST endpoints mutate `config` and call `save_config()` (atomic write via temp file in `store.py`). The `/ws` WebSocket loop iterates `config["registers"]` every 1 s, calls `manager.read_register` via `asyncio.to_thread`, and pushes `{connected, values, errors}` to the client. Per-register errors don't break the loop — they go in the `errors` map.
 
