@@ -76,18 +76,20 @@ export function WriteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm rounded-xl">
         <DialogHeader>
-          <DialogTitle>Write Register</DialogTitle>
-          <DialogDescription className="text-xs">
-            {register?.name} (address {register?.address})
+          <DialogTitle className="font-serif text-2xl font-normal tracking-tight lowercase">
+            write register
+          </DialogTitle>
+          <DialogDescription className="text-xs font-mono lowercase">
+            {register?.name} (addr {register?.address})
           </DialogDescription>
         </DialogHeader>
 
         {/* Current Value Display Box */}
-        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/40 border text-xs">
-          <span className="text-muted-foreground font-medium">Current Value</span>
-          <span className="font-mono font-semibold text-foreground text-sm">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/40 border border-border text-xs">
+          <span className="text-muted-foreground font-mono lowercase">current readout</span>
+          <span className="font-mono font-medium text-foreground text-sm">
             {formattedCurrent}
           </span>
         </div>
@@ -96,11 +98,11 @@ export function WriteDialog({
           {isCoil ? (
             <div className="flex items-center justify-between p-3 rounded-lg border bg-card">
               <div className="space-y-0.5">
-                <Label htmlFor="coil-toggle" className="text-xs font-medium">
-                  Set Coil State
+                <Label htmlFor="coil-toggle" className="text-xs font-normal lowercase">
+                  set coil state
                 </Label>
-                <p className="text-[11px] text-muted-foreground">
-                  {coilValue ? "Relay will turn ON" : "Relay will turn OFF"}
+                <p className="text-[11px] text-muted-foreground font-mono lowercase">
+                  {coilValue ? "relay state: on" : "relay state: off"}
                 </p>
               </div>
               <Switch
@@ -111,8 +113,8 @@ export function WriteDialog({
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Label htmlFor="write-value" className="text-xs">
-                New Value to Send {register?.unit && `(${register.unit})`}
+              <Label htmlFor="write-value" className="text-xs font-normal text-muted-foreground lowercase">
+                new value to send {register?.unit && `(${register.unit})`}
               </Label>
               <Input
                 id="write-value"
@@ -121,12 +123,12 @@ export function WriteDialog({
                 required
                 value={numValue}
                 onChange={(e) => setNumValue(e.target.value)}
-                placeholder="Enter target numeric value..."
-                className="h-9 text-xs font-mono"
+                placeholder="enter numeric value..."
+                className="h-9 text-xs font-mono rounded-lg"
                 autoFocus
               />
-              <p className="text-[10px] text-muted-foreground">
-                Raw value will be calculated based on scale ({register?.scale ?? 1}) and offset ({register?.offset ?? 0}).
+              <p className="text-[10px] text-muted-foreground font-mono lowercase">
+                raw calculated from scale ({register?.scale ?? 1}) & offset ({register?.offset ?? 0})
               </p>
             </div>
           )}
@@ -136,12 +138,13 @@ export function WriteDialog({
               type="button"
               variant="outline"
               size="sm"
+              className="rounded-full lowercase"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              cancel
             </Button>
-            <Button type="submit" size="sm" disabled={writing}>
-              {writing ? "Sending..." : "Send Write"}
+            <Button type="submit" size="sm" disabled={writing} className="rounded-full lowercase">
+              {writing ? "transmitting..." : "send write"}
             </Button>
           </DialogFooter>
         </form>

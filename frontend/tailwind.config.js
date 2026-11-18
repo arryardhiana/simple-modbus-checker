@@ -14,6 +14,12 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        serif: ['"Instrument Serif"', "ui-serif", "Georgia", "serif"],
+        display: ['"Instrument Serif"', "ui-serif", "Georgia", "serif"],
+        sans: ['"Geist"', "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ['"Geist Mono"', "ui-monospace", "monospace"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

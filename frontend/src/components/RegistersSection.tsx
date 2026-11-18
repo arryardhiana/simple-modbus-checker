@@ -26,32 +26,32 @@ export function RegistersSection({
   onWrite,
 }: RegistersSectionProps) {
   return (
-    <Card className="border-border/80 bg-card shadow-sm rounded-xl overflow-hidden">
-      {/* Header */}
-      <CardHeader className="p-4 sm:p-5 pb-3 border-b border-border/50 bg-muted/20">
+    <Card className="border-border/80 bg-card/90 shadow-sm rounded-xl overflow-hidden">
+      {/* Header with Lumen Serif & Lowercase */}
+      <CardHeader className="p-4 sm:p-5 pb-3 border-b border-border/60 bg-muted/20">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-sm font-semibold tracking-tight">
-                Live Registers
+            <div className="flex items-baseline gap-2">
+              <CardTitle className="font-serif text-2xl font-normal tracking-tight lowercase">
+                registers
               </CardTitle>
-              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60">
-                {registers.length} configured
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60 lowercase">
+                {registers.length} channels
               </span>
             </div>
-            <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground font-mono">
-              <Activity className="h-3 w-3 text-emerald-500" />
-              <span>1 Hz poll cycle</span>
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground font-mono lowercase">
+              <Activity className="h-3 w-3 text-primary" />
+              <span>1 hz cycle</span>
             </div>
           </div>
 
           <Button
             size="sm"
             onClick={onAdd}
-            className="h-8 gap-1.5 text-xs font-semibold shadow-xs"
+            className="h-8 rounded-full px-4 gap-1.5 text-xs font-medium lowercase shadow-xs"
           >
             <Plus className="h-3.5 w-3.5" />
-            Add Register
+            add register
           </Button>
         </div>
       </CardHeader>
@@ -62,19 +62,19 @@ export function RegistersSection({
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-3">
               <Gauge className="h-6 w-6" />
             </div>
-            <h4 className="text-sm font-semibold text-foreground">
-              No registers configured
+            <h4 className="font-serif text-lg font-normal lowercase text-foreground">
+              no registers configured
             </h4>
-            <p className="text-xs text-muted-foreground mt-1 mb-4 max-w-sm">
-              Add Modbus holding registers, analog inputs, or digital coils to start real-time monitoring and control.
+            <p className="text-xs text-muted-foreground font-mono mt-1 mb-4 max-w-sm lowercase">
+              define holding registers, analog inputs or digital coils to stream data.
             </p>
             <Button
               size="sm"
               onClick={onAdd}
-              className="gap-1.5 text-xs font-medium"
+              className="gap-1.5 text-xs font-medium rounded-full lowercase"
             >
               <Plus className="h-3.5 w-3.5" />
-              Create your first register
+              add first register
             </Button>
           </div>
         ) : (

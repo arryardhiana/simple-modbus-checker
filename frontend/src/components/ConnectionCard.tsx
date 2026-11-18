@@ -81,27 +81,27 @@ export function ConnectionCard({
   const isSerial = form.conn_type === "serial";
 
   return (
-    <Card className="border-border/80 bg-card shadow-sm rounded-xl overflow-hidden">
-      {/* Top Card Bar */}
-      <CardHeader className="p-4 sm:p-5 pb-3 border-b border-border/50 bg-muted/20">
+    <Card className="border-border/80 bg-card/90 shadow-sm rounded-xl overflow-hidden">
+      {/* Top Card Bar with Lumen Serif Heading */}
+      <CardHeader className="p-4 sm:p-5 pb-3 border-b border-border/60 bg-muted/20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <CardTitle className="text-sm font-semibold tracking-tight">
-              Interface & Transport
+          <div className="flex items-baseline gap-2.5">
+            <CardTitle className="font-serif text-2xl font-normal tracking-tight lowercase">
+              transport & interface
             </CardTitle>
             {isSerial ? (
               <Badge
                 variant="outline"
-                className="font-mono text-[11px] font-medium border-border/70"
+                className="font-mono text-[11px] font-medium border-border/70 rounded-full lowercase"
               >
-                RS485 RTU
+                serial rtu
               </Badge>
             ) : (
               <Badge
                 variant="info"
-                className="font-mono text-[11px] font-medium"
+                className="font-mono text-[11px] font-medium rounded-full lowercase"
               >
-                Modbus Gateway
+                modbus gateway
               </Badge>
             )}
           </div>
@@ -113,12 +113,12 @@ export function ConnectionCard({
                 size="sm"
                 onClick={handleRefresh}
                 disabled={refreshing || connected}
-                className="h-8 gap-1.5 text-xs font-medium"
+                className="h-8 rounded-full px-3 gap-1.5 text-xs font-medium lowercase"
               >
                 <RefreshCw
                   className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
                 />
-                Refresh ports
+                refresh ports
               </Button>
             )}
 
@@ -127,18 +127,18 @@ export function ConnectionCard({
               size="sm"
               onClick={onToggleConnect}
               disabled={isConnecting}
-              className={`h-8 px-4 text-xs font-semibold gap-1.5 shadow-sm transition-transform active:scale-[0.98] ${
+              className={`h-8 rounded-full px-4 text-xs font-medium lowercase gap-1.5 shadow-sm transition-transform active:scale-[0.98] ${
                 connected
                   ? "hover:bg-destructive/90"
-                  : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
               }`}
             >
               <Power className="h-3.5 w-3.5" />
               {isConnecting
-                ? "Connecting..."
+                ? "connecting..."
                 : connected
-                ? "Disconnect"
-                : "Connect"}
+                ? "disconnect"
+                : "connect"}
             </Button>
           </div>
         </div>
@@ -153,22 +153,22 @@ export function ConnectionCard({
           }
           className="w-full max-w-sm"
         >
-          <TabsList className="grid grid-cols-2 w-full h-8 p-1 bg-muted/70">
+          <TabsList className="grid grid-cols-2 w-full h-8 p-1 bg-muted/70 rounded-full">
             <TabsTrigger
               value="serial"
               disabled={connected}
-              className="gap-2 text-xs font-medium"
+              className="gap-2 text-xs font-medium rounded-full lowercase"
             >
               <Cable className="h-3.5 w-3.5" />
-              Serial USB
+              serial usb
             </TabsTrigger>
             <TabsTrigger
               value="tcp"
               disabled={connected}
-              className="gap-2 text-xs font-medium"
+              className="gap-2 text-xs font-medium rounded-full lowercase"
             >
               <Network className="h-3.5 w-3.5" />
-              Gateway TCP
+              gateway tcp
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -181,9 +181,9 @@ export function ConnectionCard({
               <div className="space-y-1 sm:col-span-2">
                 <Label
                   htmlFor="port-select"
-                  className="text-xs font-medium text-muted-foreground"
+                  className="text-xs font-normal text-muted-foreground lowercase"
                 >
-                  Serial Port (Adapter)
+                  serial port
                 </Label>
                 <Select
                   value={form.port}
@@ -192,9 +192,9 @@ export function ConnectionCard({
                 >
                   <SelectTrigger
                     id="port-select"
-                    className="h-8 text-xs font-mono bg-muted/30 focus:bg-background"
+                    className="h-8 text-xs font-mono bg-muted/30 focus:bg-background rounded-lg"
                   >
-                    <SelectValue placeholder="Select serial port..." />
+                    <SelectValue placeholder="select serial port..." />
                   </SelectTrigger>
                   <SelectContent>
                     {ports.length === 0 ? (
@@ -229,15 +229,15 @@ export function ConnectionCard({
 
               {/* Baud rate */}
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  Baud rate
+                <Label className="text-xs font-normal text-muted-foreground lowercase">
+                  baud rate
                 </Label>
                 <Select
                   value={String(form.baudrate)}
                   onValueChange={(v) => updateField("baudrate", parseInt(v, 10))}
                   disabled={connected}
                 >
-                  <SelectTrigger className="h-8 text-xs font-mono bg-muted/30 focus:bg-background">
+                  <SelectTrigger className="h-8 text-xs font-mono bg-muted/30 focus:bg-background rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -256,8 +256,8 @@ export function ConnectionCard({
 
               {/* Parity */}
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  Parity
+                <Label className="text-xs font-normal text-muted-foreground lowercase">
+                  parity
                 </Label>
                 <Select
                   value={form.parity}
@@ -266,18 +266,18 @@ export function ConnectionCard({
                   }
                   disabled={connected}
                 >
-                  <SelectTrigger className="h-8 text-xs font-mono bg-muted/30 focus:bg-background">
+                  <SelectTrigger className="h-8 text-xs font-mono bg-muted/30 focus:bg-background rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="N" className="text-xs">
-                      None (N)
+                    <SelectItem value="N" className="text-xs lowercase">
+                      none (n)
                     </SelectItem>
-                    <SelectItem value="E" className="text-xs">
-                      Even (E)
+                    <SelectItem value="E" className="text-xs lowercase">
+                      even (e)
                     </SelectItem>
-                    <SelectItem value="O" className="text-xs">
-                      Odd (O)
+                    <SelectItem value="O" className="text-xs lowercase">
+                      odd (o)
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -285,8 +285,8 @@ export function ConnectionCard({
 
               {/* Stop bits */}
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  Stop bits
+                <Label className="text-xs font-normal text-muted-foreground lowercase">
+                  stop bits
                 </Label>
                 <Select
                   value={String(form.stopbits)}
@@ -295,7 +295,7 @@ export function ConnectionCard({
                   }
                   disabled={connected}
                 >
-                  <SelectTrigger className="h-8 text-xs font-mono bg-muted/30 focus:bg-background">
+                  <SelectTrigger className="h-8 text-xs font-mono bg-muted/30 focus:bg-background rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -311,8 +311,8 @@ export function ConnectionCard({
 
               {/* Data bits */}
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  Data bits
+                <Label className="text-xs font-normal text-muted-foreground lowercase">
+                  data bits
                 </Label>
                 <Select
                   value={String(form.bytesize)}
@@ -321,7 +321,7 @@ export function ConnectionCard({
                   }
                   disabled={connected}
                 >
-                  <SelectTrigger className="h-8 text-xs font-mono bg-muted/30 focus:bg-background">
+                  <SelectTrigger className="h-8 text-xs font-mono bg-muted/30 focus:bg-background rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -339,22 +339,22 @@ export function ConnectionCard({
             <>
               {/* Host */}
               <div className="space-y-1 sm:col-span-2">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  Gateway IP Address / Host
+                <Label className="text-xs font-normal text-muted-foreground lowercase">
+                  gateway host
                 </Label>
                 <Input
                   value={form.host}
                   onChange={(e) => updateField("host", e.target.value)}
                   disabled={connected}
-                  placeholder="e.g. 192.168.1.100"
-                  className="h-8 text-xs font-mono bg-muted/30 focus:bg-background"
+                  placeholder="192.168.1.100"
+                  className="h-8 text-xs font-mono bg-muted/30 focus:bg-background rounded-lg"
                 />
               </div>
 
               {/* TCP Port */}
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  Port
+                <Label className="text-xs font-normal text-muted-foreground lowercase">
+                  port
                 </Label>
                 <Input
                   type="number"
@@ -365,29 +365,29 @@ export function ConnectionCard({
                     updateField("tcp_port", parseInt(e.target.value, 10) || 502)
                   }
                   disabled={connected}
-                  className="h-8 text-xs font-mono bg-muted/30 focus:bg-background"
+                  className="h-8 text-xs font-mono bg-muted/30 focus:bg-background rounded-lg"
                 />
               </div>
 
               {/* Framing / Protocol */}
               <div className="space-y-1">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  Protocol Mode
+                <Label className="text-xs font-normal text-muted-foreground lowercase">
+                  protocol mode
                 </Label>
                 <Select
                   value={form.framing}
                   onValueChange={(v) => updateField("framing", v as "tcp" | "rtu")}
                   disabled={connected}
                 >
-                  <SelectTrigger className="h-8 text-xs bg-muted/30 focus:bg-background">
+                  <SelectTrigger className="h-8 text-xs bg-muted/30 focus:bg-background rounded-lg lowercase">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="tcp" className="text-xs">
-                      Modbus TCP (Standard)
+                    <SelectItem value="tcp" className="text-xs lowercase">
+                      modbus tcp (standard)
                     </SelectItem>
-                    <SelectItem value="rtu" className="text-xs">
-                      Modbus RTU over TCP
+                    <SelectItem value="rtu" className="text-xs lowercase">
+                      modbus rtu over tcp
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -397,8 +397,8 @@ export function ConnectionCard({
 
           {/* Slave ID */}
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {isSerial ? "Target Slave ID" : "Unit ID"}
+            <Label className="text-xs font-normal text-muted-foreground lowercase">
+              {isSerial ? "slave id" : "unit id"}
             </Label>
             <Input
               type="number"
@@ -409,14 +409,14 @@ export function ConnectionCard({
                 updateField("slave_id", parseInt(e.target.value, 10) || 1)
               }
               disabled={connected}
-              className="h-8 text-xs font-mono bg-muted/30 focus:bg-background"
+              className="h-8 text-xs font-mono bg-muted/30 focus:bg-background rounded-lg"
             />
           </div>
 
           {/* Timeout */}
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">
-              Response Timeout (s)
+            <Label className="text-xs font-normal text-muted-foreground lowercase">
+              timeout (s)
             </Label>
             <Input
               type="number"
@@ -427,7 +427,7 @@ export function ConnectionCard({
                 updateField("timeout", parseFloat(e.target.value) || 1.0)
               }
               disabled={connected}
-              className="h-8 text-xs font-mono bg-muted/30 focus:bg-background"
+              className="h-8 text-xs font-mono bg-muted/30 focus:bg-background rounded-lg"
             />
           </div>
         </div>

@@ -96,44 +96,46 @@ export function RegisterDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{register ? "Edit Register" : "Add Register"}</DialogTitle>
+          <DialogTitle className="font-serif text-2xl font-normal tracking-tight lowercase">
+            {register ? "edit register" : "add register"}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Name */}
           <div className="space-y-1.5">
-            <Label htmlFor="reg-name" className="text-xs">
-              Name
+            <Label htmlFor="reg-name" className="text-xs font-normal text-muted-foreground lowercase">
+              register name
             </Label>
             <Input
               id="reg-name"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Line Voltage"
-              className="h-8 text-xs"
+              placeholder="e.g. line voltage"
+              className="h-8 text-xs rounded-lg"
             />
           </div>
 
           {/* Type */}
           <div className="space-y-1.5">
-            <Label className="text-xs">Register Type</Label>
+            <Label className="text-xs font-normal text-muted-foreground lowercase">register type</Label>
             <Select value={type} onValueChange={(v) => setType(v as RegisterType)}>
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger className="h-8 text-xs rounded-lg lowercase">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="holding" className="text-xs">
-                  Holding Register (Read FC03 / Write FC06)
+                <SelectItem value="holding" className="text-xs lowercase">
+                  holding register (read fc03 / write fc06)
                 </SelectItem>
-                <SelectItem value="input" className="text-xs">
-                  Input Register (Read Only FC04)
+                <SelectItem value="input" className="text-xs lowercase">
+                  input register (read only fc04)
                 </SelectItem>
-                <SelectItem value="coil" className="text-xs">
-                  Coil (Read FC01 / Write FC05)
+                <SelectItem value="coil" className="text-xs lowercase">
+                  coil (read fc01 / write fc05)
                 </SelectItem>
-                <SelectItem value="discrete" className="text-xs">
-                  Discrete Input (Read Only FC02)
+                <SelectItem value="discrete" className="text-xs lowercase">
+                  discrete input (read only fc02)
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -141,8 +143,8 @@ export function RegisterDialog({
 
           {/* Address */}
           <div className="space-y-1.5">
-            <Label htmlFor="reg-addr" className="text-xs">
-              Address (0-65535)
+            <Label htmlFor="reg-addr" className="text-xs font-normal text-muted-foreground lowercase">
+              address (0-65535)
             </Label>
             <Input
               id="reg-addr"
@@ -152,7 +154,7 @@ export function RegisterDialog({
               required
               value={address}
               onChange={(e) => setAddress(parseInt(e.target.value, 10) || 0)}
-              className="h-8 text-xs font-mono"
+              className="h-8 text-xs font-mono rounded-lg"
             />
           </div>
 
@@ -162,9 +164,9 @@ export function RegisterDialog({
               <div className="grid grid-cols-2 gap-3">
                 {/* Data Type */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Data Type</Label>
+                  <Label className="text-xs font-normal text-muted-foreground lowercase">data type</Label>
                   <Select value={dataType} onValueChange={(v) => setDataType(v as DataType)}>
-                    <SelectTrigger className="h-8 text-xs font-mono">
+                    <SelectTrigger className="h-8 text-xs font-mono rounded-lg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -179,14 +181,14 @@ export function RegisterDialog({
 
                 {/* Word Order */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Word Order (32-bit)</Label>
+                  <Label className="text-xs font-normal text-muted-foreground lowercase">word order (32-bit)</Label>
                   <Select value={wordOrder} onValueChange={(v) => setWordOrder(v as WordOrder)}>
-                    <SelectTrigger className="h-8 text-xs">
+                    <SelectTrigger className="h-8 text-xs rounded-lg lowercase">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="big" className="text-xs">Big (ABCD)</SelectItem>
-                      <SelectItem value="little" className="text-xs">Swap (CDAB)</SelectItem>
+                      <SelectItem value="big" className="text-xs lowercase">big (abcd)</SelectItem>
+                      <SelectItem value="little" className="text-xs lowercase">swap (cdab)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -195,8 +197,8 @@ export function RegisterDialog({
               <div className="grid grid-cols-2 gap-3">
                 {/* Scale */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="reg-scale" className="text-xs">
-                    Scale Multiplier
+                  <Label htmlFor="reg-scale" className="text-xs font-normal text-muted-foreground lowercase">
+                    scale multiplier
                   </Label>
                   <Input
                     id="reg-scale"
@@ -204,15 +206,15 @@ export function RegisterDialog({
                     step="any"
                     value={scale}
                     onChange={(e) => setScale(parseFloat(e.target.value) || 1)}
-                    className="h-8 text-xs font-mono"
+                    className="h-8 text-xs font-mono rounded-lg"
                   />
-                  <p className="text-[10px] text-muted-foreground">e.g. 0.1 converts 328 to 32.8</p>
+                  <p className="text-[10px] text-muted-foreground font-mono lowercase">e.g. 0.1 scales 328 to 32.8</p>
                 </div>
 
                 {/* Offset */}
                 <div className="space-y-1.5">
-                  <Label htmlFor="reg-offset" className="text-xs">
-                    Offset Adder
+                  <Label htmlFor="reg-offset" className="text-xs font-normal text-muted-foreground lowercase">
+                    offset adder
                   </Label>
                   <Input
                     id="reg-offset"
@@ -220,23 +222,23 @@ export function RegisterDialog({
                     step="any"
                     value={offset}
                     onChange={(e) => setOffset(parseFloat(e.target.value) || 0)}
-                    className="h-8 text-xs font-mono"
+                    className="h-8 text-xs font-mono rounded-lg"
                   />
-                  <p className="text-[10px] text-muted-foreground">Added after scale</p>
+                  <p className="text-[10px] text-muted-foreground font-mono lowercase">added after scale</p>
                 </div>
               </div>
 
               {/* Unit */}
               <div className="space-y-1.5">
-                <Label htmlFor="reg-unit" className="text-xs">
-                  Engineering Unit
+                <Label htmlFor="reg-unit" className="text-xs font-normal text-muted-foreground lowercase">
+                  engineering unit
                 </Label>
                 <Input
                   id="reg-unit"
                   value={unit}
                   onChange={(e) => setUnit(e.target.value)}
-                  placeholder="V, A, °C, kW, rpm..."
-                  className="h-8 text-xs"
+                  placeholder="v, a, °c, kw, rpm..."
+                  className="h-8 text-xs rounded-lg"
                 />
               </div>
             </>
@@ -247,12 +249,13 @@ export function RegisterDialog({
               type="button"
               variant="outline"
               size="sm"
+              className="rounded-full lowercase"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              cancel
             </Button>
-            <Button type="submit" size="sm" disabled={saving}>
-              {saving ? "Saving..." : "Save Register"}
+            <Button type="submit" size="sm" disabled={saving} className="rounded-full lowercase">
+              {saving ? "saving..." : "save register"}
             </Button>
           </DialogFooter>
         </form>
