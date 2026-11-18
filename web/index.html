@@ -3,14 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Modbus register reader and writer dashboard for serial and TCP devices." />
   <title>Modbus Reader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500;600&family=Host+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <header>
-    <h1>Modbus Reader</h1>
-    <div id="status" class="status disconnected" title="">
-      <span class="dot"></span><span id="status-text">Disconnected</span>
+    <div class="header-brand">
+      <h1>Modbus Reader</h1>
+      <span class="subtext">Instrumentation and diagnostic console</span>
+    </div>
+    <div class="header-controls">
+      <div id="status" class="status disconnected" role="status" aria-live="polite">
+        <span class="dot" aria-hidden="true"></span>
+        <span id="status-text">Disconnected</span>
+      </div>
+      <button id="theme-toggle" class="btn btn-ghost" type="button" aria-label="Toggle theme">Dark mode</button>
     </div>
   </header>
 
@@ -29,10 +40,12 @@
 
       <div class="segmented-control" role="tablist" aria-label="Connection Type">
         <button type="button" class="segment-btn active" data-tab="serial" role="tab" aria-selected="true">
-          <span class="icon">🔌</span> Serial (USB / RS485)
+          <svg class="segment-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <span class="segment-text">Serial (USB, RS485)</span>
         </button>
         <button type="button" class="segment-btn" data-tab="tcp" role="tab" aria-selected="false">
-          <span class="icon">🌐</span> Network (Modbus Gateway)
+          <svg class="segment-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+          <span class="segment-text">Network (Modbus Gateway)</span>
         </button>
       </div>
 
@@ -82,7 +95,7 @@
         <!-- Network / Gateway settings -->
         <label class="full" data-conn="tcp" style="display: none;">
           <span>Gateway Host / IP Address</span>
-          <input type="text" name="host" placeholder="e.g. 192.168.1.100" value="192.168.1.100" />
+          <input type="text" name="host" placeholder="192.168.1.100" value="192.168.1.100" />
         </label>
         <label data-conn="tcp" style="display: none;">
           <span>TCP Port</span>
@@ -101,7 +114,7 @@
         <label>
           <span id="slave-id-label">Slave ID</span>
           <input type="number" name="slave_id" min="1" max="247" value="1" />
-          <span class="hint" id="slave-id-hint">Target RS485 slave address (1-247)</span>
+          <span class="hint" id="slave-id-hint">Target RS485 slave address (1 to 247)</span>
         </label>
         <label>
           <span>Timeout (s)</span>
@@ -116,7 +129,7 @@
         <button id="add-reg" class="btn btn-primary" type="button">+ Add Register</button>
       </div>
       <div id="registers" class="reg-grid">
-        <p class="muted">No registers yet — click "Add Register" to begin.</p>
+        <p class="muted">No registers yet. Click “Add Register” to begin.</p>
       </div>
     </section>
   </main>
@@ -127,15 +140,15 @@
       <form id="reg-form" class="form-grid" autocomplete="off">
         <label class="full">
           <span>Name</span>
-          <input type="text" name="name" required placeholder="e.g. Voltage" />
+          <input type="text" name="name" required placeholder="Voltage" />
         </label>
         <label>
           <span>Type</span>
           <select name="type">
             <option value="holding">Holding Register (Read FC03 / Write FC06)</option>
-            <option value="input">Input Register (Read Only - FC04)</option>
+            <option value="input">Input Register (Read Only FC04)</option>
             <option value="coil">Coil (Read FC01 / Write FC05)</option>
-            <option value="discrete">Discrete Input (Read Only - FC02)</option>
+            <option value="discrete">Discrete Input (Read Only FC02)</option>
           </select>
         </label>
         <label>
@@ -163,17 +176,17 @@
         <label data-show="register">
           <span>Scale</span>
           <input type="number" name="scale" step="any" value="1" />
-          <small class="hint">Multiplier on the raw value. e.g. sensor returns <b>328</b> → set <b>0.1</b> → shown as <b>32.8</b>. Leave at 1 if no scaling needed.</small>
+          <small class="hint">Multiplier on the raw value. Sensor returns 328 with 0.1 scale displays as 32.8.</small>
         </label>
         <label data-show="register">
           <span>Offset</span>
           <input type="number" name="offset" step="any" value="0" />
-          <small class="hint">Added after scale. e.g. raw Kelvin → set <b>-273.15</b> to display °C.</small>
+          <small class="hint">Added after scale. For Kelvin to Celsius, set -273.15.</small>
         </label>
         <label data-show="register">
           <span>Unit</span>
-          <input type="text" name="unit" placeholder="V, A, °C…" />
-          <small class="hint">Just a label shown next to the value.</small>
+          <input type="text" name="unit" placeholder="V, A, °C" />
+          <small class="hint">Unit symbol displayed beside the measured value.</small>
         </label>
         <div class="modal-actions full">
           <button type="button" class="btn btn-ghost" id="modal-cancel">Cancel</button>
@@ -190,13 +203,13 @@
       
       <div class="write-info-box">
         <span class="info-label">Current Value</span>
-        <span class="info-val" id="write-current-val">—</span>
+        <span class="info-val measured" id="write-current-val">-</span>
       </div>
 
       <form id="write-form" class="form-grid" autocomplete="off">
         <label class="full" id="write-input-label">
           <span id="write-input-title">New value to send</span>
-          <input type="number" step="any" name="write_value" id="write-input-val" required placeholder="Enter value…" />
+          <input type="number" step="any" name="write_value" id="write-input-val" required placeholder="Enter numeric value" />
         </label>
         <div id="write-coil-container" class="full write-coil-box">
           <span>Set Coil State (ON / OFF)</span>

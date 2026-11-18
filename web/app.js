@@ -58,7 +58,7 @@ async function loadPorts() {
   } else {
     for (const p of ports) {
       const text = p.description && p.description !== "n/a"
-        ? `${p.device} — ${p.description}`
+        ? `${p.device} (${p.description})`
         : p.device;
       sel.add(new Option(text, p.device));
     }
@@ -156,11 +156,11 @@ function setStatus(connected, errorMsg) {
     el.classList.add("connected");
     if (isTcp) {
       const mode = conn.framing === "rtu" ? "RTU" : "TCP";
-      $("#status-text").textContent = `Connected • Gateway (${conn.host || "host"}:${conn.tcp_port || 502} [${mode}])`;
+      $("#status-text").textContent = `Connected: Gateway (${conn.host || "host"}:${conn.tcp_port || 502} [${mode}])`;
       el.title = `Modbus Gateway @ ${conn.host}:${conn.tcp_port}`;
     } else {
       const portName = conn.port ? conn.port.split("/").pop() : "Serial";
-      $("#status-text").textContent = `Connected • USB (${portName})`;
+      $("#status-text").textContent = `Connected: USB (${portName})`;
       el.title = conn.port || "Serial";
     }
   } else if (errorMsg) {
@@ -216,7 +216,7 @@ function renderRegisters() {
   const grid = $("#registers");
   const regs = state.config.registers || [];
   if (regs.length === 0) {
-    grid.innerHTML = '<p class="muted">No registers yet — click "Add Register" to begin.</p>';
+    grid.innerHTML = '<p class="muted">No registers yet. Click “Add Register” to begin.</p>';
     return;
   }
   grid.innerHTML = "";
@@ -296,19 +296,23 @@ function buildRegisterCard(r) {
 
   card.innerHTML = `
     <div class="actions-row">
-      ${writable ? '<button class="btn-write" data-act="open-write" type="button" title="Write to register">⚡ Write</button>' : ""}
-      <button class="icon-btn" data-act="edit" title="Edit" aria-label="Edit">✎</button>
-      <button class="icon-btn" data-act="del" title="Delete" aria-label="Delete">✕</button>
+      ${writable ? '<button class="btn-write" data-act="open-write" type="button" title="Write to register">Write</button>' : ""}
+      <button class="icon-btn" data-act="edit" title="Edit register" aria-label="Edit register">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+      <button class="icon-btn" data-act="del" title="Delete register" aria-label="Delete register">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
     <div class="name"></div>
-    <div class="value"><span class="v">—</span><span class="unit"></span></div>
+    <div class="value"><span class="v">-</span><span class="unit"></span></div>
     <div class="meta"></div>
     <svg class="spark" viewBox="0 0 ${SPARK_W} ${SPARK_H}" preserveAspectRatio="none" aria-hidden="true"></svg>
   `;
   card.querySelector(".name").textContent = r.name;
   card.querySelector(".unit").textContent = r.unit || "";
   card.querySelector(".meta").textContent =
-    `${fc} · addr ${r.address}` + (isBit ? "" : ` · ${r.data_type}`);
+    `${fc} (address ${r.address}` + (isBit ? ")" : `, ${r.data_type})`);
 
   card.querySelector('[data-act="edit"]').addEventListener("click", () => openModal(r));
   card.querySelector('[data-act="del"]').addEventListener("click", () => deleteRegister(r.id));
@@ -320,7 +324,7 @@ function buildRegisterCard(r) {
 
 function updateRegisterValue(id, value, error) {
   const card = $(`.reg[data-id="${id}"]`);
-  let textVal = "—";
+  let textVal = "-";
   if (!error && value != null) {
     if (typeof value === "boolean") {
       textVal = value ? "ON" : "OFF";
@@ -335,7 +339,7 @@ function updateRegisterValue(id, value, error) {
     const v = card.querySelector(".value .v");
     if (error) {
       card.classList.add("error");
-      v.textContent = "—";
+      v.textContent = "-";
       v.title = error;
     } else {
       card.classList.remove("error");
@@ -420,7 +424,7 @@ function openWriteModal(reg) {
     const displayVal = typeof last === "boolean" ? (last ? "ON" : "OFF") : formatNumber(last);
     $("#write-current-val").textContent = `${displayVal}${unit}`;
   } else {
-    $("#write-current-val").textContent = "—";
+    $("#write-current-val").textContent = "-";
   }
 
   $("#write-modal").classList.remove("hidden");
@@ -616,6 +620,30 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
   $("#conn-form").addEventListener("change", scheduleSaveConnection);
+
+  // Theme toggle
+  const themeBtn = $("#theme-toggle");
+  const storedMode = localStorage.getItem("theme-mode");
+  if (storedMode === "dark") {
+    document.documentElement.setAttribute("data-mode", "dark");
+    if (themeBtn) themeBtn.textContent = "Light mode";
+  } else {
+    document.documentElement.removeAttribute("data-mode");
+    if (themeBtn) themeBtn.textContent = "Dark mode";
+  }
+
+  themeBtn?.addEventListener("click", () => {
+    const isDark = document.documentElement.getAttribute("data-mode") === "dark";
+    if (isDark) {
+      document.documentElement.removeAttribute("data-mode");
+      localStorage.setItem("theme-mode", "light");
+      themeBtn.textContent = "Dark mode";
+    } else {
+      document.documentElement.setAttribute("data-mode", "dark");
+      localStorage.setItem("theme-mode", "dark");
+      themeBtn.textContent = "Light mode";
+    }
+  });
 
   await loadConfig();
   await loadPorts();
