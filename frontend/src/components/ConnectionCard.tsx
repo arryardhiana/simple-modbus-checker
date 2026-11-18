@@ -4,10 +4,16 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Cable, Network } from "lucide-react";
+import { RefreshCw, Cable, Network, Power } from "lucide-react";
 
 interface ConnectionCardProps {
   connection: ConnectionConfig | undefined;
@@ -52,7 +58,10 @@ export function ConnectionCard({
     }
   }, [connection]);
 
-  const updateField = <K extends keyof ConnectionConfig>(key: K, value: ConnectionConfig[K]) => {
+  const updateField = <K extends keyof ConnectionConfig>(
+    key: K,
+    value: ConnectionConfig[K]
+  ) => {
     const updated = { ...form, [key]: value };
     setForm(updated);
 
@@ -72,21 +81,31 @@ export function ConnectionCard({
   const isSerial = form.conn_type === "serial";
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
+    <Card className="border-border/80 bg-card shadow-sm rounded-xl overflow-hidden">
+      {/* Top Card Bar */}
+      <CardHeader className="p-4 sm:p-5 pb-3 border-b border-border/50 bg-muted/20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-base font-medium">Connection</CardTitle>
+          <div className="flex items-center gap-2.5">
+            <CardTitle className="text-sm font-semibold tracking-tight">
+              Interface & Transport
+            </CardTitle>
             {isSerial ? (
-              <Badge variant="outline" className="font-normal text-xs text-muted-foreground">
-                Serial (USB)
+              <Badge
+                variant="outline"
+                className="font-mono text-[11px] font-medium border-border/70"
+              >
+                RS485 RTU
               </Badge>
             ) : (
-              <Badge variant="info" className="font-normal text-xs">
-                Network (Gateway)
+              <Badge
+                variant="info"
+                className="font-mono text-[11px] font-medium"
+              >
+                Modbus Gateway
               </Badge>
             )}
           </div>
+
           <div className="flex items-center gap-2">
             {isSerial && (
               <Button
@@ -94,59 +113,87 @@ export function ConnectionCard({
                 size="sm"
                 onClick={handleRefresh}
                 disabled={refreshing || connected}
-                className="h-8 gap-1.5 text-xs"
+                className="h-8 gap-1.5 text-xs font-medium"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
+                />
                 Refresh ports
               </Button>
             )}
+
             <Button
               variant={connected ? "destructive" : "default"}
               size="sm"
               onClick={onToggleConnect}
               disabled={isConnecting}
-              className="h-8 px-4 text-xs font-medium"
+              className={`h-8 px-4 text-xs font-semibold gap-1.5 shadow-sm transition-transform active:scale-[0.98] ${
+                connected
+                  ? "hover:bg-destructive/90"
+                  : "bg-emerald-600 hover:bg-emerald-700 text-white"
+              }`}
             >
-              {isConnecting ? "Connecting..." : connected ? "Disconnect" : "Connect"}
+              <Power className="h-3.5 w-3.5" />
+              {isConnecting
+                ? "Connecting..."
+                : connected
+                ? "Disconnect"
+                : "Connect"}
             </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="p-4 sm:p-5 space-y-4">
         {/* Connection Type Tabs */}
         <Tabs
           value={form.conn_type}
-          onValueChange={(val) => updateField("conn_type", val as "serial" | "tcp")}
-          className="w-full max-w-md"
+          onValueChange={(val) =>
+            updateField("conn_type", val as "serial" | "tcp")
+          }
+          className="w-full max-w-sm"
         >
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="serial" disabled={connected} className="gap-2 text-xs">
+          <TabsList className="grid grid-cols-2 w-full h-8 p-1 bg-muted/70">
+            <TabsTrigger
+              value="serial"
+              disabled={connected}
+              className="gap-2 text-xs font-medium"
+            >
               <Cable className="h-3.5 w-3.5" />
-              Serial (USB / RS485)
+              Serial USB
             </TabsTrigger>
-            <TabsTrigger value="tcp" disabled={connected} className="gap-2 text-xs">
+            <TabsTrigger
+              value="tcp"
+              disabled={connected}
+              className="gap-2 text-xs font-medium"
+            >
               <Network className="h-3.5 w-3.5" />
-              Network (Modbus Gateway)
+              Gateway TCP
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
         {/* Form Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 pt-1">
           {isSerial ? (
             <>
               {/* Serial Port */}
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="port-select" className="text-xs text-muted-foreground">
-                  Serial Port
+              <div className="space-y-1 sm:col-span-2">
+                <Label
+                  htmlFor="port-select"
+                  className="text-xs font-medium text-muted-foreground"
+                >
+                  Serial Port (Adapter)
                 </Label>
                 <Select
                   value={form.port}
                   onValueChange={(v) => updateField("port", v)}
                   disabled={connected}
                 >
-                  <SelectTrigger id="port-select" className="h-8 text-xs font-mono">
+                  <SelectTrigger
+                    id="port-select"
+                    className="h-8 text-xs font-mono bg-muted/30 focus:bg-background"
+                  >
                     <SelectValue placeholder="Select serial port..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -156,13 +203,23 @@ export function ConnectionCard({
                       </SelectItem>
                     ) : (
                       ports.map((p) => (
-                        <SelectItem key={p.device} value={p.device} className="text-xs font-mono">
-                          {p.device} {p.description && p.description !== "n/a" ? `(${p.description})` : ""}
+                        <SelectItem
+                          key={p.device}
+                          value={p.device}
+                          className="text-xs font-mono"
+                        >
+                          {p.device}{" "}
+                          {p.description && p.description !== "n/a"
+                            ? `(${p.description})`
+                            : ""}
                         </SelectItem>
                       ))
                     )}
                     {form.port && !ports.some((p) => p.device === form.port) && (
-                      <SelectItem value={form.port} className="text-xs font-mono">
+                      <SelectItem
+                        value={form.port}
+                        className="text-xs font-mono"
+                      >
                         {form.port} (saved)
                       </SelectItem>
                     )}
@@ -171,20 +228,26 @@ export function ConnectionCard({
               </div>
 
               {/* Baud rate */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Baud rate</Label>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Baud rate
+                </Label>
                 <Select
                   value={String(form.baudrate)}
                   onValueChange={(v) => updateField("baudrate", parseInt(v, 10))}
                   disabled={connected}
                 >
-                  <SelectTrigger className="h-8 text-xs font-mono">
+                  <SelectTrigger className="h-8 text-xs font-mono bg-muted/30 focus:bg-background">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {[2400, 4800, 9600, 19200, 38400, 57600, 115200].map((b) => (
-                      <SelectItem key={b} value={String(b)} className="text-xs font-mono">
-                        {b}
+                      <SelectItem
+                        key={b}
+                        value={String(b)}
+                        className="text-xs font-mono"
+                      >
+                        {b} bps
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -192,56 +255,82 @@ export function ConnectionCard({
               </div>
 
               {/* Parity */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Parity</Label>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Parity
+                </Label>
                 <Select
                   value={form.parity}
-                  onValueChange={(v) => updateField("parity", v as "N" | "E" | "O")}
+                  onValueChange={(v) =>
+                    updateField("parity", v as "N" | "E" | "O")
+                  }
                   disabled={connected}
                 >
-                  <SelectTrigger className="h-8 text-xs font-mono">
+                  <SelectTrigger className="h-8 text-xs font-mono bg-muted/30 focus:bg-background">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="N" className="text-xs">None (N)</SelectItem>
-                    <SelectItem value="E" className="text-xs">Even (E)</SelectItem>
-                    <SelectItem value="O" className="text-xs">Odd (O)</SelectItem>
+                    <SelectItem value="N" className="text-xs">
+                      None (N)
+                    </SelectItem>
+                    <SelectItem value="E" className="text-xs">
+                      Even (E)
+                    </SelectItem>
+                    <SelectItem value="O" className="text-xs">
+                      Odd (O)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Stop bits */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Stop bits</Label>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Stop bits
+                </Label>
                 <Select
                   value={String(form.stopbits)}
-                  onValueChange={(v) => updateField("stopbits", parseInt(v, 10) as 1 | 2)}
+                  onValueChange={(v) =>
+                    updateField("stopbits", parseInt(v, 10) as 1 | 2)
+                  }
                   disabled={connected}
                 >
-                  <SelectTrigger className="h-8 text-xs font-mono">
+                  <SelectTrigger className="h-8 text-xs font-mono bg-muted/30 focus:bg-background">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1" className="text-xs">1</SelectItem>
-                    <SelectItem value="2" className="text-xs">2</SelectItem>
+                    <SelectItem value="1" className="text-xs">
+                      1 bit
+                    </SelectItem>
+                    <SelectItem value="2" className="text-xs">
+                      2 bits
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Data bits */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Data bits</Label>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Data bits
+                </Label>
                 <Select
                   value={String(form.bytesize)}
-                  onValueChange={(v) => updateField("bytesize", parseInt(v, 10) as 7 | 8)}
+                  onValueChange={(v) =>
+                    updateField("bytesize", parseInt(v, 10) as 7 | 8)
+                  }
                   disabled={connected}
                 >
-                  <SelectTrigger className="h-8 text-xs font-mono">
+                  <SelectTrigger className="h-8 text-xs font-mono bg-muted/30 focus:bg-background">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="8" className="text-xs">8</SelectItem>
-                    <SelectItem value="7" className="text-xs">7</SelectItem>
+                    <SelectItem value="8" className="text-xs">
+                      8 bits
+                    </SelectItem>
+                    <SelectItem value="7" className="text-xs">
+                      7 bits
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -249,46 +338,57 @@ export function ConnectionCard({
           ) : (
             <>
               {/* Host */}
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs text-muted-foreground">Gateway Host / IP Address</Label>
+              <div className="space-y-1 sm:col-span-2">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Gateway IP Address / Host
+                </Label>
                 <Input
                   value={form.host}
                   onChange={(e) => updateField("host", e.target.value)}
                   disabled={connected}
                   placeholder="e.g. 192.168.1.100"
-                  className="h-8 text-xs font-mono"
+                  className="h-8 text-xs font-mono bg-muted/30 focus:bg-background"
                 />
               </div>
 
               {/* TCP Port */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">TCP Port</Label>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Port
+                </Label>
                 <Input
                   type="number"
                   min={1}
                   max={65535}
                   value={form.tcp_port}
-                  onChange={(e) => updateField("tcp_port", parseInt(e.target.value, 10) || 502)}
+                  onChange={(e) =>
+                    updateField("tcp_port", parseInt(e.target.value, 10) || 502)
+                  }
                   disabled={connected}
-                  className="h-8 text-xs font-mono"
+                  className="h-8 text-xs font-mono bg-muted/30 focus:bg-background"
                 />
-                <p className="text-[10px] text-muted-foreground">Default: 502</p>
               </div>
 
               {/* Framing / Protocol */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Protocol Mode</Label>
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Protocol Mode
+                </Label>
                 <Select
                   value={form.framing}
                   onValueChange={(v) => updateField("framing", v as "tcp" | "rtu")}
                   disabled={connected}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="h-8 text-xs bg-muted/30 focus:bg-background">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="tcp" className="text-xs">Modbus TCP (Standard)</SelectItem>
-                    <SelectItem value="rtu" className="text-xs">Modbus RTU over TCP</SelectItem>
+                    <SelectItem value="tcp" className="text-xs">
+                      Modbus TCP (Standard)
+                    </SelectItem>
+                    <SelectItem value="rtu" className="text-xs">
+                      Modbus RTU over TCP
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -296,35 +396,39 @@ export function ConnectionCard({
           )}
 
           {/* Slave ID */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">
-              {isSerial ? "Slave ID" : "Unit ID (Slave ID)"}
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-muted-foreground">
+              {isSerial ? "Target Slave ID" : "Unit ID"}
             </Label>
             <Input
               type="number"
               min={1}
               max={247}
               value={form.slave_id}
-              onChange={(e) => updateField("slave_id", parseInt(e.target.value, 10) || 1)}
+              onChange={(e) =>
+                updateField("slave_id", parseInt(e.target.value, 10) || 1)
+              }
               disabled={connected}
-              className="h-8 text-xs font-mono"
+              className="h-8 text-xs font-mono bg-muted/30 focus:bg-background"
             />
-            <p className="text-[10px] text-muted-foreground">Target address (1-247)</p>
           </div>
 
           {/* Timeout */}
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Timeout (seconds)</Label>
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-muted-foreground">
+              Response Timeout (s)
+            </Label>
             <Input
               type="number"
               step="0.1"
               min="0.1"
               value={form.timeout}
-              onChange={(e) => updateField("timeout", parseFloat(e.target.value) || 1.0)}
+              onChange={(e) =>
+                updateField("timeout", parseFloat(e.target.value) || 1.0)
+              }
               disabled={connected}
-              className="h-8 text-xs font-mono"
+              className="h-8 text-xs font-mono bg-muted/30 focus:bg-background"
             />
-            <p className="text-[10px] text-muted-foreground">Socket / serial timeout</p>
           </div>
         </div>
       </CardContent>

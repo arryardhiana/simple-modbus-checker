@@ -47,10 +47,10 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col transition-colors">
+    <div className="min-h-screen bg-background tech-bg flex flex-col transition-colors selection:bg-primary/20">
       <Header config={config} wsConnected={wsConnected} />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 space-y-6">
+      <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 space-y-5">
         <ConnectionCard
           connection={config?.connection}
           ports={ports}

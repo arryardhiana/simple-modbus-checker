@@ -2,7 +2,7 @@ import { RegisterDef, HistoryPoint } from "@/types/modbus";
 import { RegisterCard } from "./RegisterCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Plus, Cpu } from "lucide-react";
+import { Plus, Gauge, Activity } from "lucide-react";
 
 interface RegistersSectionProps {
   registers: RegisterDef[];
@@ -26,37 +26,59 @@ export function RegistersSection({
   onWrite,
 }: RegistersSectionProps) {
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-base font-medium">Registers</CardTitle>
-            <span className="text-xs text-muted-foreground font-mono">
-              ({registers.length})
-            </span>
+    <Card className="border-border/80 bg-card shadow-sm rounded-xl overflow-hidden">
+      {/* Header */}
+      <CardHeader className="p-4 sm:p-5 pb-3 border-b border-border/50 bg-muted/20">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm font-semibold tracking-tight">
+                Live Registers
+              </CardTitle>
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/60">
+                {registers.length} configured
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground font-mono">
+              <Activity className="h-3 w-3 text-emerald-500" />
+              <span>1 Hz poll cycle</span>
+            </div>
           </div>
-          <Button size="sm" onClick={onAdd} className="h-8 gap-1.5 text-xs">
+
+          <Button
+            size="sm"
+            onClick={onAdd}
+            className="h-8 gap-1.5 text-xs font-semibold shadow-xs"
+          >
             <Plus className="h-3.5 w-3.5" />
             Add Register
           </Button>
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="p-4 sm:p-5">
         {registers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 text-center rounded-lg border border-dashed bg-muted/20">
-            <Cpu className="h-8 w-8 text-muted-foreground/60 mb-2" />
-            <h4 className="text-sm font-medium">No registers defined</h4>
+          <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl border border-dashed border-border/80 bg-muted/10">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-3">
+              <Gauge className="h-6 w-6" />
+            </div>
+            <h4 className="text-sm font-semibold text-foreground">
+              No registers configured
+            </h4>
             <p className="text-xs text-muted-foreground mt-1 mb-4 max-w-sm">
-              Add holding registers, input registers, coils, or discrete inputs to start polling data.
+              Add Modbus holding registers, analog inputs, or digital coils to start real-time monitoring and control.
             </p>
-            <Button size="sm" variant="outline" onClick={onAdd} className="gap-1.5 text-xs">
+            <Button
+              size="sm"
+              onClick={onAdd}
+              className="gap-1.5 text-xs font-medium"
+            >
               <Plus className="h-3.5 w-3.5" />
-              Add your first register
+              Create your first register
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {registers.map((reg) => (
               <RegisterCard
                 key={reg.id}
